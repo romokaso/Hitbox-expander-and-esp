@@ -2,8 +2,6 @@
 
 A client-side Lua script for Roblox with a graphical interface. It creates a **"Hitbox changer & esp"** window for configuring visual character-part changes and player ESP indicators.
 
-> ⚠️ **Important:** Using ESP, hitbox modifications, or third-party executors in games you do not own may violate Roblox's Terms of Use and a game's rules, potentially resulting in account penalties. Use this code only where you have permission, such as when testing your own experience.
-
 ## Features
 
 ### Hitbox Changer
