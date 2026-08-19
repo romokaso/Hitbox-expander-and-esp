@@ -1,71 +1,71 @@
 # Hitbox Changer & ESP
 
-Клиентский Lua-скрипт для Roblox с графическим интерфейсом. Он создаёт окно **«Hitbox changer & esp»**, в котором можно настроить визуальное изменение частей персонажей и ESP-индикаторы игроков.
+A client-side Lua script for Roblox with a graphical interface. It creates a **"Hitbox changer & esp"** window for configuring visual character-part changes and player ESP indicators.
 
-> ⚠️ **Важно:** использование ESP, изменения хитбоксов или сторонних executors в чужих играх может нарушать правила Roblox и правила конкретной игры и привести к санкциям для аккаунта. Применяйте код только там, где у вас есть разрешение (например, при тестировании собственного опыта).
+> ⚠️ **Important:** Using ESP, hitbox modifications, or third-party executors in games you do not own may violate Roblox's Terms of Use and a game's rules, potentially resulting in account penalties. Use this code only where you have permission, such as when testing your own experience.
 
-## Возможности
+## Features
 
 ### Hitbox Changer
 
-При включении скрипт обрабатывает персонажей **всех игроков, кроме локального игрока**:
+When enabled, the script processes characters for **all players except the local player**:
 
-- задаёт размер `HumanoidRootPart` в соответствии с выбранным значением;
-- меняет размер `Head` до 80% выбранного значения;
-- меняет размер остальных поддерживаемых частей тела до 70% выбранного значения;
-- отключает коллизии изменённых частей (`CanCollide = false`);
-- визуально окрашивает голову и части тела в цвет команды и назначает материал `ForceField`;
-- позволяет сделать визуальные части полупрозрачными либо полностью скрытыми через параметр **Disable Transparency**;
-- сохраняет исходные параметры частей (размер, прозрачность, коллизии, цвет, материал и тени) и восстанавливает их при выключении функции или закрытии интерфейса.
+- Sets `HumanoidRootPart` to the selected size.
+- Sets `Head` to 80% of the selected size.
+- Sets the remaining supported body parts to 70% of the selected size.
+- Disables collisions on modified parts (`CanCollide = false`).
+- Visually colors heads and body parts using the player's team color and applies the `ForceField` material.
+- Makes the visual parts semi-transparent or fully hidden with the **Disable Transparency** option.
+- Stores each part's original size, transparency, collision state, color, material, and shadow setting, then restores them when the feature is disabled or the interface is closed.
 
-Поддерживаются названия частей как R6, так и R15: `HumanoidRootPart`, `Head`, `Torso`, руки, ноги, `UpperTorso`, `LowerTorso` и составные части конечностей.
+The script supports both R6 and R15 part names, including `HumanoidRootPart`, `Head`, `Torso`, arms, legs, `UpperTorso`, `LowerTorso`, and compound limb parts.
 
 ### ESP
 
-Для каждого другого живого игрока создаются:
+For every other living player, the script creates:
 
-- `Highlight` с заливкой и контуром в цвет команды;
-- надпись над персонажем (`BillboardGui`), которая показывает:
-  - отображаемое имя, если оно отличается от username;
-  - username;
-  - расстояние до игрока в studs;
-  - текущее и максимальное здоровье.
+- A `Highlight` with fill and outline colors based on the player's team.
+- A label above the character (`BillboardGui`) showing:
+  - Display name, when it differs from the username.
+  - Username.
+  - Distance to the player in studs.
+  - Current and maximum health.
 
-ESP и хитбоксы обновляются в `RunService.Heartbeat`, поэтому информация меняется при движении, респавне, смене здоровья и подключении новых игроков.
+ESP and hitboxes are updated through `RunService.Heartbeat`, so they respond to movement, respawns, health changes, and new players joining the server.
 
-### Интерфейс и настройки
+### Interface and Settings
 
-- Изменяемый размер хитбокса с проверкой минимального значения `1`.
-- Включение/выключение Hitbox и ESP.
-- Светлая и тёмная темы.
-- Сворачивание окна, подтверждение перед закрытием и перетаскивание за верхнюю панель.
-- Назначаемые горячие клавиши для:
-  - переключения Hitbox;
-  - переключения ESP;
-  - отображения/скрытия интерфейса;
-  - сворачивания;
-  - применения выбранного размера.
+- Adjustable hitbox size with a minimum value of `1`.
+- Hitbox and ESP toggles.
+- Light and dark themes.
+- Window minimization, close confirmation, and title-bar dragging.
+- Assignable hotkeys for:
+  - Toggling Hitbox.
+  - Toggling ESP.
+  - Showing or hiding the interface.
+  - Minimizing the window.
+  - Applying the selected hitbox size.
 
-## Сохранение параметров
+## Saved Settings
 
-Скрипт сохраняет следующие настройки в файл `hitbox_settings.json`:
+The script saves the following values in `hitbox_settings.json`:
 
-- размер хитбокса;
-- выбранную тему;
-- значение **Disable Transparency**;
-- назначенные горячие клавиши.
+- Hitbox size.
+- Selected theme.
+- **Disable Transparency** setting.
+- Assigned hotkeys.
 
-Для сохранения используются `writefile`, `readfile` и `isfile`. Это не стандартные API Roblox, поэтому сохранение доступно только в среде, где эти функции предоставлены. Если их нет, интерфейс и основные функции всё равно создаются, но настройки между запусками не сохраняются.
+Settings persistence uses `writefile`, `readfile`, and `isfile`. These are not standard Roblox APIs, so saving works only in environments that provide those functions. If they are unavailable, the interface and core functionality still initialize, but settings are not retained between runs.
 
-## Технические замечания
+## Technical Notes
 
-- Скрипт работает на стороне клиента: он создаёт `ScreenGui` в `PlayerGui` локального игрока и меняет локально доступные объекты персонажей.
-- В современных Roblox-играх фактические попадания и урон, как правило, проверяются сервером. Поэтому изменение размеров частей на клиенте не гарантирует влияния на игровую механику.
-- В исходном коде нет загрузки внешнего кода, HTTP-запросов, телепортаций или сбора учётных данных. `HttpService` используется только для кодирования и декодирования локального JSON-файла.
+- The script runs on the client: it creates a `ScreenGui` in the local player's `PlayerGui` and changes locally accessible character objects.
+- Modern Roblox games generally validate real hit detection and damage on the server. As a result, changing part sizes on the client does not guarantee an effect on gameplay mechanics.
+- The source does not load external code, make HTTP requests, teleport players, or collect credentials. `HttpService` is used only to encode and decode the local JSON settings file.
 
-## Файлы
+## Files
 
-| Файл | Описание |
+| File | Description |
 | --- | --- |
-| `Hitbox changer & esp` | Основной Lua-скрипт: интерфейс, ESP, обработка хитбоксов и настройки. |
-| `README.md` | Описание проекта. |
+| `Hitbox changer & esp` | Main Lua script: interface, ESP, hitbox handling, and settings. |
+| `README.md` | Project documentation. |
