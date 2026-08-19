@@ -1,13 +1,42 @@
+--[[
+	Hitbox changer & esp  |  by: romokaso
+	Универсальный Roblox-скрипт: увеличение хитбоксов других игроков и ESP
+	(имя / дистанция / HP / подсветка модели) с перетаскиваемым GUI.
+
+	Из чего состоит файл:
+	  1. Сервисы и локальный игрок
+	  2. Сохранение и загрузка настроек в файл (writefile / readfile эксплойта)
+	  3. Построение интерфейса: главное окно, окно подтверждения, окно настроек
+	  4. Состояние скрипта (флаги, таблицы данных, кейбинды)
+	  5. Логика ESP (создание, обновление, удаление)
+	  6. Логика хитбоксов (сохранение оригиналов, изменение, восстановление)
+	  7. Действия (toggle / apply / minimize) и подписки на события
+
+	Важно: скрипт клиентский. Все изменения частей чужих персонажей видны
+	только локально, поэтому оригинальные значения обязательно сохраняются,
+	чтобы их можно было вернуть при выключении.
+--]]
+
+-- === СЕРВИСЫ ROBLOX ===
+-- Players — список игроков, RunService — покадровые события,
+-- TweenService — плавные анимации GUI, UserInputService — клавиши и мышь.
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
+-- === ЛОКАЛЬНЫЙ ИГРОК ===
+-- playerGui — контейнер, в который будет помещён интерфейс скрипта.
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
+-- === СОХРАНЕНИЕ НАСТРОЕК ===
+-- Файл настроек в папке эксплойта (размер хитбокса, тема, кейбинды).
 local SAVE_FILE = "hitbox_settings.json"
 
+-- Записывает таблицу настроек в JSON-файл.
+-- Всё обёрнуто в pcall: если эксплойт не поддерживает writefile,
+-- скрипт просто продолжит работать без сохранения.
 local function saveSettings(data)
 	pcall(function()
 		if writefile then
@@ -16,6 +45,8 @@ local function saveSettings(data)
 	end)
 end
 
+-- Читает настройки из файла и возвращает таблицу либо nil,
+-- если файла нет, он повреждён или функции чтения недоступны.
 local function loadSettings()
 	local ok, result = pcall(function()
 		if readfile and isfile and isfile(SAVE_FILE) then
@@ -27,14 +58,22 @@ local function loadSettings()
 	return nil
 end
 
+-- Настройки прошлого запуска. Применяются в самом конце скрипта
+-- (applyLoadedSettings), когда весь интерфейс уже создан.
 local savedData = loadSettings()
 
+-- === ПОСТРОЕНИЕ ИНТЕРФЕЙСА ===
+-- Корневой ScreenGui. ResetOnSpawn = false, чтобы меню не исчезало
+-- после смерти/респавна персонажа.
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "HitboxChanger"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
 
+-- Главное окно меню (260x180), по центру экрана.
+-- Active = true нужно для перетаскивания, ClipsDescendants — чтобы
+-- вложенные окна не вылезали за скруглённые края при анимации.
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
 mainFrame.Size = UDim2.new(0, 260, 0, 180)
@@ -45,16 +84,19 @@ mainFrame.Active = true
 mainFrame.ClipsDescendants = true
 mainFrame.Parent = screenGui
 
+-- Скругление углов главного окна.
 local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 12)
 mainCorner.Parent = mainFrame
 
+-- Тонкая рамка вокруг главного окна.
 local mainStroke = Instance.new("UIStroke")
 mainStroke.Color = Color3.fromRGB(60, 60, 70)
 mainStroke.Thickness = 2
 mainStroke.Transparency = 0.5
 mainStroke.Parent = mainFrame
 
+-- Верхняя панель: заголовок и кнопки. За неё же окно перетаскивается.
 local titleBar = Instance.new("Frame")
 titleBar.Name = "TitleBar"
 titleBar.Size = UDim2.new(1, 0, 0, 35)
@@ -66,6 +108,8 @@ local titleCorner = Instance.new("UICorner")
 titleCorner.CornerRadius = UDim.new(0, 12)
 titleCorner.Parent = titleBar
 
+-- Заплатка: UICorner скругляет ВСЕ углы панели, а нижние углы должны
+-- быть прямыми. Этот прямоугольник закрывает нижнее скругление.
 local titleFix = Instance.new("Frame")
 titleFix.Size = UDim2.new(1, 0, 0, 12)
 titleFix.Position = UDim2.new(0, 0, 1, -12)
@@ -73,6 +117,7 @@ titleFix.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 titleFix.BorderSizePixel = 0
 titleFix.Parent = titleBar
 
+-- Текст заголовка меню.
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, -100, 1, 0)
 titleLabel.Position = UDim2.new(0, 10, 0, 0)
@@ -84,6 +129,7 @@ titleLabel.Font = Enum.Font.GothamBold
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 titleLabel.Parent = titleBar
 
+-- Кнопка "шестерёнка" — открывает окно настроек.
 local settingsButtonTop = Instance.new("TextButton")
 settingsButtonTop.Name = "SettingsButtonTop"
 settingsButtonTop.Size = UDim2.new(0, 26, 0, 26)
@@ -100,6 +146,7 @@ local settingsTopCorner = Instance.new("UICorner")
 settingsTopCorner.CornerRadius = UDim.new(0, 6)
 settingsTopCorner.Parent = settingsButtonTop
 
+-- Кнопка сворачивания меню до одной верхней панели.
 local minimizeButton = Instance.new("TextButton")
 minimizeButton.Name = "MinimizeButton"
 minimizeButton.Size = UDim2.new(0, 26, 0, 26)
@@ -116,6 +163,7 @@ local minimizeCorner = Instance.new("UICorner")
 minimizeCorner.CornerRadius = UDim.new(0, 6)
 minimizeCorner.Parent = minimizeButton
 
+-- Кнопка закрытия — показывает окно подтверждения.
 local closeButton = Instance.new("TextButton")
 closeButton.Name = "CloseButton"
 closeButton.Size = UDim2.new(0, 26, 0, 26)
@@ -132,6 +180,7 @@ local closeCorner = Instance.new("UICorner")
 closeCorner.CornerRadius = UDim.new(0, 6)
 closeCorner.Parent = closeButton
 
+-- Основная область под панелью заголовка: поле размера и переключатели.
 local contentFrame = Instance.new("Frame")
 contentFrame.Name = "ContentFrame"
 contentFrame.Size = UDim2.new(1, 0, 1, -35)
@@ -140,6 +189,7 @@ contentFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 contentFrame.BorderSizePixel = 0
 contentFrame.Parent = mainFrame
 
+-- Подпись к полю ввода размера хитбокса.
 local sizeLabel = Instance.new("TextLabel")
 sizeLabel.Size = UDim2.new(0, 75, 0, 22)
 sizeLabel.Position = UDim2.new(0, 12, 0, 8)
@@ -151,6 +201,7 @@ sizeLabel.Font = Enum.Font.Gotham
 sizeLabel.TextXAlignment = Enum.TextXAlignment.Left
 sizeLabel.Parent = contentFrame
 
+-- Поле ввода размера хитбокса в studs (по умолчанию 10).
 local textBox = Instance.new("TextBox")
 textBox.Size = UDim2.new(0, 80, 0, 28)
 textBox.Position = UDim2.new(0, 90, 0, 6)
@@ -172,6 +223,7 @@ textBoxStroke.Color = Color3.fromRGB(80, 80, 90)
 textBoxStroke.Thickness = 1
 textBoxStroke.Parent = textBox
 
+-- Кнопка Apply — применяет введённый размер.
 local applyButton = Instance.new("TextButton")
 applyButton.Size = UDim2.new(0, 50, 0, 28)
 applyButton.Position = UDim2.new(0, 178, 0, 6)
@@ -187,6 +239,7 @@ local applyCorner = Instance.new("UICorner")
 applyCorner.CornerRadius = UDim.new(0, 7)
 applyCorner.Parent = applyButton
 
+-- Главный переключатель хитбоксов (красный = OFF, зелёный = ON).
 local toggleButton = Instance.new("TextButton")
 toggleButton.Size = UDim2.new(0, 236, 0, 32)
 toggleButton.Position = UDim2.new(0, 12, 0, 42)
@@ -202,6 +255,7 @@ local toggleCorner = Instance.new("UICorner")
 toggleCorner.CornerRadius = UDim.new(0, 7)
 toggleCorner.Parent = toggleButton
 
+-- Переключатель ESP.
 local espToggleButton = Instance.new("TextButton")
 espToggleButton.Size = UDim2.new(0, 236, 0, 32)
 espToggleButton.Position = UDim2.new(0, 12, 0, 80)
@@ -217,6 +271,7 @@ local espToggleCorner = Instance.new("UICorner")
 espToggleCorner.CornerRadius = UDim.new(0, 7)
 espToggleCorner.Parent = espToggleButton
 
+-- Подпись автора внизу развёрнутого меню.
 local footerLabel = Instance.new("TextButton")
 footerLabel.Size = UDim2.new(1, 0, 0, 25)
 footerLabel.Position = UDim2.new(0, 0, 1, -25)
@@ -227,6 +282,7 @@ footerLabel.TextSize = 10
 footerLabel.Font = Enum.Font.GothamBold
 footerLabel.Parent = contentFrame
 
+-- Та же подпись, но для свёрнутого состояния меню.
 local footerLabelMinimized = Instance.new("TextButton")
 footerLabelMinimized.Size = UDim2.new(1, 0, 0, 25)
 footerLabelMinimized.Position = UDim2.new(0, 0, 0, 35)
@@ -238,6 +294,8 @@ footerLabelMinimized.Font = Enum.Font.GothamBold
 footerLabelMinimized.Visible = false
 footerLabelMinimized.Parent = mainFrame
 
+-- === ОКНО ПОДТВЕРЖДЕНИЯ ЗАКРЫТИЯ ===
+-- Перекрывает главное окно (ZIndex = 10), по умолчанию скрыто.
 local confirmFrame = Instance.new("Frame")
 confirmFrame.Name = "ConfirmFrame"
 confirmFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -253,6 +311,7 @@ local confirmCorner = Instance.new("UICorner")
 confirmCorner.CornerRadius = UDim.new(0, 12)
 confirmCorner.Parent = confirmFrame
 
+-- Вопрос "точно закрыть GUI?".
 local confirmText = Instance.new("TextLabel")
 confirmText.Size = UDim2.new(1, -24, 0, 40)
 confirmText.Position = UDim2.new(0, 12, 0, 45)
@@ -265,6 +324,7 @@ confirmText.TextWrapped = true
 confirmText.ZIndex = 11
 confirmText.Parent = confirmFrame
 
+-- Yes — полностью выключить скрипт и удалить интерфейс.
 local yesButton = Instance.new("TextButton")
 yesButton.Size = UDim2.new(0, 105, 0, 32)
 yesButton.Position = UDim2.new(0, 20, 0, 100)
@@ -281,6 +341,7 @@ local yesCorner = Instance.new("UICorner")
 yesCorner.CornerRadius = UDim.new(0, 7)
 yesCorner.Parent = yesButton
 
+-- No — просто закрыть окно подтверждения.
 local noButton = Instance.new("TextButton")
 noButton.Size = UDim2.new(0, 105, 0, 32)
 noButton.Position = UDim2.new(0, 135, 0, 100)
@@ -297,6 +358,8 @@ local noCorner = Instance.new("UICorner")
 noCorner.CornerRadius = UDim.new(0, 7)
 noCorner.Parent = noButton
 
+-- === ОКНО НАСТРОЕК ===
+-- Выезжает справа поверх главного окна (стартовая позиция X = 1).
 local settingsFrame = Instance.new("Frame")
 settingsFrame.Name = "SettingsFrame"
 settingsFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -311,6 +374,7 @@ local settingsFrameCorner = Instance.new("UICorner")
 settingsFrameCorner.CornerRadius = UDim.new(0, 12)
 settingsFrameCorner.Parent = settingsFrame
 
+-- Панель заголовка окна настроек с кнопкой "назад".
 local settingsTitleBar = Instance.new("Frame")
 settingsTitleBar.Size = UDim2.new(1, 0, 0, 35)
 settingsTitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
@@ -322,6 +386,7 @@ local settingsTitleCorner = Instance.new("UICorner")
 settingsTitleCorner.CornerRadius = UDim.new(0, 12)
 settingsTitleCorner.Parent = settingsTitleBar
 
+-- Такая же заплатка нижних скруглённых углов, как в главном окне.
 local settingsTitleFix = Instance.new("Frame")
 settingsTitleFix.Size = UDim2.new(1, 0, 0, 12)
 settingsTitleFix.Position = UDim2.new(0, 0, 1, -12)
@@ -342,6 +407,7 @@ settingsTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 settingsTitleLabel.ZIndex = 11
 settingsTitleLabel.Parent = settingsTitleBar
 
+-- Кнопка "←" — вернуться в главное меню.
 local backButton = Instance.new("TextButton")
 backButton.Size = UDim2.new(0, 26, 0, 26)
 backButton.Position = UDim2.new(1, -28, 0, 4)
@@ -358,6 +424,7 @@ local backCorner = Instance.new("UICorner")
 backCorner.CornerRadius = UDim.new(0, 6)
 backCorner.Parent = backButton
 
+-- Прокручиваемая область настроек (тема, прозрачность, кейбинды).
 local settingsContentFrame = Instance.new("ScrollingFrame")
 settingsContentFrame.Size = UDim2.new(1, 0, 1, -35)
 settingsContentFrame.Position = UDim2.new(0, 0, 0, 35)
@@ -369,6 +436,7 @@ settingsContentFrame.ScrollBarImageColor3 = Color3.fromRGB(80, 150, 255)
 settingsContentFrame.CanvasSize = UDim2.new(0, 0, 0, 350)
 settingsContentFrame.Parent = settingsFrame
 
+-- --- Настройка: тема оформления ---
 local themeLabel = Instance.new("TextLabel")
 themeLabel.Size = UDim2.new(1, -24, 0, 22)
 themeLabel.Position = UDim2.new(0, 12, 0, 10)
@@ -381,6 +449,7 @@ themeLabel.TextXAlignment = Enum.TextXAlignment.Left
 themeLabel.ZIndex = 11
 themeLabel.Parent = settingsContentFrame
 
+-- Кнопка выбора тёмной темы.
 local darkButton = Instance.new("TextButton")
 darkButton.Size = UDim2.new(0, 110, 0, 32)
 darkButton.Position = UDim2.new(0, 12, 0, 36)
@@ -397,12 +466,14 @@ local darkCorner = Instance.new("UICorner")
 darkCorner.CornerRadius = UDim.new(0, 7)
 darkCorner.Parent = darkButton
 
+-- Синяя обводка = отметка активной темы (по умолчанию тёмная).
 local darkStroke = Instance.new("UIStroke")
 darkStroke.Color = Color3.fromRGB(80, 150, 255)
 darkStroke.Thickness = 3
 darkStroke.ZIndex = 11
 darkStroke.Parent = darkButton
 
+-- Кнопка выбора светлой темы.
 local lightButton = Instance.new("TextButton")
 lightButton.Size = UDim2.new(0, 110, 0, 32)
 lightButton.Position = UDim2.new(0, 138, 0, 36)
@@ -419,6 +490,7 @@ local lightCorner = Instance.new("UICorner")
 lightCorner.CornerRadius = UDim.new(0, 7)
 lightCorner.Parent = lightButton
 
+-- --- Настройка: полностью прозрачные (невидимые) хитбоксы ---
 local transparencyLabel = Instance.new("TextLabel")
 transparencyLabel.Size = UDim2.new(0, 150, 0, 22)
 transparencyLabel.Position = UDim2.new(0, 12, 0, 78)
@@ -431,6 +503,7 @@ transparencyLabel.TextXAlignment = Enum.TextXAlignment.Left
 transparencyLabel.ZIndex = 11
 transparencyLabel.Parent = settingsContentFrame
 
+-- ON = увеличенные части не видно, но попадать по ним всё равно можно.
 local disableTransparencyButton = Instance.new("TextButton")
 disableTransparencyButton.Size = UDim2.new(0, 60, 0, 28)
 disableTransparencyButton.Position = UDim2.new(0, 178, 0, 76)
@@ -447,6 +520,7 @@ local disableTransparencyCorner = Instance.new("UICorner")
 disableTransparencyCorner.CornerRadius = UDim.new(0, 7)
 disableTransparencyCorner.Parent = disableTransparencyButton
 
+-- --- Настройка: горячие клавиши ---
 local keybindSectionLabel = Instance.new("TextLabel")
 keybindSectionLabel.Size = UDim2.new(1, -24, 0, 22)
 keybindSectionLabel.Position = UDim2.new(0, 12, 0, 116)
@@ -459,6 +533,9 @@ keybindSectionLabel.TextXAlignment = Enum.TextXAlignment.Left
 keybindSectionLabel.ZIndex = 11
 keybindSectionLabel.Parent = settingsContentFrame
 
+-- Создаёт одну строку кейбинда: подпись слева и кнопка выбора клавиши справа.
+-- Возвращает подпись, кнопку и её обводку — они нужны для смены темы
+-- и для подсветки режима "ожидание нажатия клавиши".
 local function makeKeybindRow(labelText, yPos)
 	local rowLabel = Instance.new("TextLabel")
 	rowLabel.Size = UDim2.new(0, 130, 0, 28)
@@ -497,12 +574,26 @@ local function makeKeybindRow(labelText, yPos)
 	return rowLabel, rowButton, rowStroke
 end
 
+-- Пять строк кейбиндов, координата Y задаётся вручную с шагом 36 пикселей.
 local keybindHitboxLabel, keybindHitboxButton, keybindHitboxStroke = makeKeybindRow("Toggle Hitbox:", 142)
 local keybindEspLabel, keybindEspButton, keybindEspStroke = makeKeybindRow("Toggle ESP:", 178)
 local keybindGuiLabel, keybindGuiButton, keybindGuiStroke = makeKeybindRow("Toggle GUI:", 214)
 local keybindMinimizeLabel, keybindMinimizeButton, keybindMinimizeStroke = makeKeybindRow("Minimize:", 250)
 local keybindApplyLabel, keybindApplyButton, keybindApplyStroke = makeKeybindRow("Apply Hitbox:", 286)
 
+-- === СОСТОЯНИЕ СКРИПТА ===
+-- hitboxSize        — текущий размер хитбокса в studs
+-- isEnabled         — включён ли хитбокс-чейнджер
+-- isMinimized       — свёрнуто ли меню
+-- currentTheme      — "dark" или "light"
+-- isDragging/dragInput/dragStart/startPos — состояние перетаскивания окна
+-- espEnabled/espData — состояние ESP и созданные для игроков объекты
+-- lastAnimTime/animCooldown — защита от спама анимации кнопок
+-- disableTransparency — режим невидимых хитбоксов
+-- characterConnections — подписки на CharacterAdded по каждому игроку
+-- originalData      — оригинальные свойства частей персонажей
+-- guiVisible        — виден ли интерфейс (кейбинд Toggle GUI)
+-- modifiedChars     — персонажи, к которым уже применён хитбокс
 local hitboxSize = 10
 local isEnabled = false
 local isMinimized = false
@@ -521,6 +612,7 @@ local originalData = {}
 local guiVisible = true
 local modifiedChars = {}
 
+-- Назначенные клавиши для действий (nil = клавиша не назначена).
 local keybinds = {
 	hitbox = nil,
 	esp = nil,
@@ -529,8 +621,10 @@ local keybinds = {
 	apply = nil,
 }
 
+-- Имя действия, для которого сейчас ожидается нажатие клавиши.
 local listeningFor = nil
 
+-- Быстрый доступ к элементам строк кейбиндов по имени действия.
 local keybindButtons = {
 	hitbox = keybindHitboxButton,
 	esp = keybindEspButton,
@@ -555,6 +649,7 @@ local keybindLabels = {
 	apply = keybindApplyLabel,
 }
 
+-- Имена частей тела для R6 и R15 — обрабатываются те, что реально найдены.
 local hitboxPartNames = {
 	"HumanoidRootPart", "Head", "Torso",
 	"Left Arm", "Right Arm", "Left Leg", "Right Leg",
@@ -565,11 +660,14 @@ local hitboxPartNames = {
 	"RightUpperLeg", "RightLowerLeg", "RightFoot"
 }
 
+-- Читаемое имя клавиши для кнопки в настройках.
 local function getKeyName(keyCode)
 	if keyCode == nil then return "None" end
 	return keyCode.Name
 end
 
+-- Собирает текущие настройки в таблицу и сохраняет их в файл.
+-- Enum.KeyCode нельзя записать в JSON, поэтому пишется имя клавиши.
 local function collectAndSave()
 	local data = {
 		hitboxSize = hitboxSize,
@@ -583,6 +681,9 @@ local function collectAndSave()
 	saveSettings(data)
 end
 
+-- Включает/выключает режим ожидания нажатия клавиши для действия.
+-- Предыдущая кнопка возвращается к обычному виду, новая подсвечивается
+-- синим и показывает "Press key...". actionName = nil — выйти из режима.
 local function setListening(actionName)
 	if listeningFor then
 		local prevBtn = keybindButtons[listeningFor]
@@ -605,6 +706,7 @@ local function setListening(actionName)
 	end
 end
 
+-- Назначает клавишу действию, обновляет кнопку и сохраняет настройки.
 local function applyKeybind(actionName, keyCode)
 	keybinds[actionName] = keyCode
 	local btn = keybindButtons[actionName]
@@ -617,6 +719,9 @@ local function applyKeybind(actionName, keyCode)
 	collectAndSave()
 end
 
+-- Обработчики кнопок кейбиндов: клик включает/выключает ожидание клавиши,
+-- наведение подсвечивает кнопку (кроме той, что уже ждёт нажатия).
+-- capturedAction нужен, чтобы каждая замыкание помнило своё действие.
 for actionName, btn in pairs(keybindButtons) do
 	local capturedAction = actionName
 	btn.MouseButton1Click:Connect(function()
@@ -638,6 +743,7 @@ for actionName, btn in pairs(keybindButtons) do
 	end)
 end
 
+-- Цвет команды игрока (для ESP и подсветки частей). Без команды — белый.
 local function getTeamColor(targetPlayer)
 	if targetPlayer and targetPlayer.Team then
 		return targetPlayer.TeamColor.Color
@@ -645,6 +751,8 @@ local function getTeamColor(targetPlayer)
 	return Color3.fromRGB(255, 255, 255)
 end
 
+-- Анимация нажатия: кнопка чуть увеличивается и возвращается к размеру.
+-- animCooldown не даёт запускать анимацию слишком часто.
 local function animateButton(button)
 	local currentTime = tick()
 	if currentTime - lastAnimTime < animCooldown then return end
@@ -662,6 +770,11 @@ local function animateButton(button)
 	end)
 end
 
+-- === ТЕМЫ ОФОРМЛЕНИЯ ===
+-- Перекрашивает все элементы интерфейса через плавные твины.
+-- Активная тема отмечается синей обводкой: для тёмной — постоянный
+-- darkStroke, для светлой — обводка, создаваемая и удаляемая на лету.
+-- В конце настройки сохраняются в файл.
 local function applyTheme(theme)
 	currentTheme = theme
 	local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
@@ -738,6 +851,8 @@ local function applyTheme(theme)
 	collectAndSave()
 end
 
+-- === ESP ===
+-- Удаляет надпись и подсветку игрока и чистит запись в espData.
 local function removeESP(targetPlayer)
 	if espData[targetPlayer] then
 		if espData[targetPlayer].gui and espData[targetPlayer].gui.Parent then
@@ -750,6 +865,9 @@ local function removeESP(targetPlayer)
 	end
 end
 
+-- Создаёт ESP для игрока: BillboardGui над головой + Highlight на модель.
+-- Пропускает самого себя и мёртвых персонажей. Если ник и отображаемое имя
+-- различаются, делается две строки (имя + инфо), иначе одна.
 local function createESP(targetPlayer)
 	if targetPlayer == player then return end
 	removeESP(targetPlayer)
@@ -762,8 +880,12 @@ local function createESP(targetPlayer)
 	if humanoid and humanoid.Health <= 0 then return end
 	local attachPart = head or hrpPart
 	local teamColor = getTeamColor(targetPlayer)
+	-- Если у игрока задано отображаемое имя (отличается от ника), нужны
+	-- две строки, поэтому и высота таблички разная.
 	local hasDisplayName = string.lower(targetPlayer.DisplayName) ~= string.lower(targetPlayer.Name)
 	local guiHeight = hasDisplayName and 36 or 20
+	-- Табличка над головой. AlwaysOnTop — видно даже сквозь стены,
+	-- StudsOffset поднимает её примерно на 3.2 studs над точкой крепления.
 	local billboardGui = Instance.new("BillboardGui")
 	billboardGui.Name = "ESP_" .. targetPlayer.Name
 	billboardGui.AlwaysOnTop = true
@@ -814,6 +936,7 @@ local function createESP(targetPlayer)
 		espData[targetPlayer] = {gui = billboardGui, displayLabel = nil, infoLabel = textLabel, highlight = nil, hasDisplayName = false}
 	end
 	local highlight = Instance.new("Highlight")
+	-- Подсветка всей модели цветом команды (заливка + контур).
 	highlight.Name = "ESPHighlight_" .. targetPlayer.Name
 	highlight.Adornee = char
 	highlight.FillColor = teamColor
@@ -824,6 +947,9 @@ local function createESP(targetPlayer)
 	espData[targetPlayer].highlight = highlight
 end
 
+-- Обновляет ESP каждый кадр: пересоздаёт пропавшие объекты (например,
+-- после респавна), обновляет дистанцию, HP и цвет команды, убирает ESP
+-- у мёртвых и вышедших из игры.
 local function updateESP()
 	if not espEnabled then return end
 	for _, targetPlayer in pairs(Players:GetPlayers()) do
@@ -834,6 +960,8 @@ local function updateESP()
 				if humanoid and humanoid.Health <= 0 then
 					removeESP(targetPlayer)
 				else
+					-- Объекты ESP могли пропасть (респавн, смена персонажа) —
+					-- проверяем и при необходимости создаём заново.
 					local needsRecreate = false
 					if not espData[targetPlayer] then
 						needsRecreate = true
@@ -848,6 +976,7 @@ local function updateESP()
 						local teamColor = getTeamColor(targetPlayer)
 						local myHrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 						local targetHrp = char:FindFirstChild("HumanoidRootPart")
+						-- Дистанция в studs между мной и целью ("?" если её не вычислить).
 						local studsText = "?"
 						if myHrp and targetHrp then
 							studsText = tostring(math.floor((myHrp.Position - targetHrp.Position).Magnitude))
@@ -874,6 +1003,7 @@ local function updateESP()
 			end
 		end
 	end
+	-- Убираем ESP игроков, которые уже вышли из игры.
 	local toClean = {}
 	for targetPlayer in pairs(espData) do
 		if not targetPlayer or not targetPlayer.Parent then
@@ -885,10 +1015,15 @@ local function updateESP()
 	end
 end
 
+-- === ХИТБОКСЫ ===
+-- Запоминает исходные свойства всех частей персонажа, чтобы потом
+-- вернуть их обратно. Повторно для того же персонажа не выполняется.
 local function saveOriginalData(char)
 	if not char then return end
 	if originalData[char] then return end
 	local data = {}
+	-- valid остаётся false, если у модели ещё нет ни одной части
+	-- (персонаж не догрузился) — тогда ничего не запоминаем и попробуем позже.
 	local valid = false
 	for _, child in pairs(char:GetChildren()) do
 		if child:IsA("BasePart") then
@@ -908,6 +1043,8 @@ local function saveOriginalData(char)
 	end
 end
 
+-- Возвращает частям персонажа сохранённые свойства и убирает его
+-- из таблиц originalData/modifiedChars.
 local function restoreOriginalData(char)
 	if not char or not char.Parent then return end
 	local saved = originalData[char]
@@ -927,6 +1064,9 @@ local function restoreOriginalData(char)
 	modifiedChars[char] = nil
 end
 
+-- Аварийное восстановление при закрытии скрипта: где есть сохранённые
+-- данные — восстанавливаем их, где нет — ставим безопасные значения,
+-- после чего полностью очищаем таблицы.
 local function forceRestoreAllHitboxes()
 	for _, v in pairs(Players:GetPlayers()) do
 		if v ~= player and v.Character then
@@ -934,6 +1074,8 @@ local function forceRestoreAllHitboxes()
 			if originalData[char] then
 				restoreOriginalData(char)
 			else
+				-- Оригинал не сохранён — возвращаем хотя бы стандартное
+				-- поведение: части без коллизии, HumanoidRootPart невидим.
 				for _, partName in pairs(hitboxPartNames) do
 					local part = char:FindFirstChild(partName)
 					if part and part:IsA("BasePart") then
@@ -963,14 +1105,21 @@ local function forceRestoreAllHitboxes()
 	end
 end
 
+-- Применяет увеличенные хитбоксы ко всем чужим живым персонажам.
+-- HumanoidRootPart — полный размер и невидимость (это и есть хитбокс),
+-- Head — 80% размера, остальные части — 70%, с цветом команды и
+-- материалом ForceField. Вызывается каждый кадр из Heartbeat.
 local function updateHitboxes()
 	if not isEnabled then return end
 	for _, v in pairs(Players:GetPlayers()) do
 		if v ~= player and v.Character then
 			local char = v.Character
+			-- Персонаж мог быть удалён из Workspace прямо сейчас — пропускаем.
 			if not char.Parent then continue end
 			local humanoid = char:FindFirstChildOfClass("Humanoid")
+			-- Мёртвых не трогаем, иначе увеличенные части останутся на трупе.
 			if not humanoid or humanoid.Health <= 0 then continue end
+			-- Первым делом запоминаем оригинал, иначе вернуть будет нечего.
 			if not originalData[char] then
 				saveOriginalData(char)
 			end
@@ -980,17 +1129,21 @@ local function updateHitboxes()
 			for _, partName in pairs(hitboxPartNames) do
 				local part = char:FindFirstChild(partName)
 				if part and part:IsA("BasePart") then
+					-- Главная часть: именно её увеличение и даёт большой хитбокс.
+					-- Остаётся невидимой, чтобы не мешать обзору.
 					if partName == "HumanoidRootPart" then
 						part.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
 						part.Transparency = 1
 						part.CanCollide = false
 					elseif partName == "Head" then
+						-- Голова чуть меньше корпуса, подсвечена цветом команды.
 						part.Size = Vector3.new(hitboxSize * 0.8, hitboxSize * 0.8, hitboxSize * 0.8)
 						part.CanCollide = false
 						part.Color = teamColor
 						part.Material = Enum.Material.ForceField
 						part.Transparency = disableTransparency and 1 or 0.7
 					else
+						-- Остальные конечности: 70% от заданного размера.
 						part.Size = Vector3.new(hitboxSize * 0.7, hitboxSize * 0.7, hitboxSize * 0.7)
 						part.CanCollide = false
 						part.Color = teamColor
@@ -1001,6 +1154,8 @@ local function updateHitboxes()
 			end
 		end
 	end
+	-- Чистим таблицу от персонажей, которых больше нет в игре.
+	-- Сначала собираем список: удалять ключи прямо во время pairs нельзя.
 	local toClean = {}
 	for char in pairs(originalData) do
 		if not char or not char.Parent then
@@ -1013,6 +1168,7 @@ local function updateHitboxes()
 	end
 end
 
+-- Возвращает всем игрокам оригинальные хитбоксы (выключение функции).
 local function resetHitboxes()
 	for _, v in pairs(Players:GetPlayers()) do
 		if v ~= player and v.Character then
@@ -1029,6 +1185,9 @@ local function resetHitboxes()
 	end
 end
 
+-- === ДЕЙСТВИЯ (кнопки и горячие клавиши) ===
+-- Применяет размер из поля ввода: минимум 1, при корректном значении
+-- кнопка мигает зелёным, при некорректном — рамка поля краснеет.
 local function doApplyHitbox()
 	local inputValue = tonumber(textBox.Text)
 	if inputValue then
@@ -1056,6 +1215,8 @@ local function doApplyHitbox()
 	end
 end
 
+-- Свернуть/развернуть меню. Игнорируется, если открыто окно
+-- подтверждения или настроек.
 local function doMinimize()
 	if confirmFrame.Visible or settingsFrame.Visible then return end
 	isMinimized = not isMinimized
@@ -1072,6 +1233,7 @@ local function doMinimize()
 	end
 end
 
+-- Включить/выключить хитбоксы и обновить вид кнопки.
 local function doToggleHitbox()
 	isEnabled = not isEnabled
 	if isEnabled then
@@ -1085,6 +1247,8 @@ local function doToggleHitbox()
 	end
 end
 
+-- Включить/выключить ESP: при включении создаётся для всех игроков,
+-- при выключении все объекты удаляются.
 local function doToggleESP()
 	espEnabled = not espEnabled
 	if espEnabled then
@@ -1106,19 +1270,25 @@ local function doToggleESP()
 	end
 end
 
+-- Скрыть/показать интерфейс (сам скрипт продолжает работать).
 local function doToggleGui()
 	guiVisible = not guiVisible
 	mainFrame.Visible = guiVisible
 end
 
+-- Подписка на респавн игрока: старые данные сбрасываются, а после
+-- небольшой паузы (персонаж должен догрузиться) заново применяются
+-- хитбокс и ESP, если они включены.
 local function setupCharacterAdded(targetPlayer)
 	if characterConnections[targetPlayer] then
 		characterConnections[targetPlayer]:Disconnect()
 		characterConnections[targetPlayer] = nil
 	end
 	characterConnections[targetPlayer] = targetPlayer.CharacterAdded:Connect(function(char)
+		-- Новый персонаж — данные старого больше не актуальны.
 		originalData[char] = nil
 		modifiedChars[char] = nil
+		-- Пауза, чтобы части тела успели загрузиться в модель.
 		task.wait(0.5)
 		if not char or not char.Parent then return end
 		if isEnabled then
@@ -1131,6 +1301,8 @@ local function setupCharacterAdded(targetPlayer)
 	end)
 end
 
+-- Применяет настройки из файла к уже созданному интерфейсу:
+-- размер хитбокса, режим прозрачности, кейбинды и тему.
 local function applyLoadedSettings()
 	if not savedData then return end
 	if savedData.hitboxSize then
@@ -1150,6 +1322,8 @@ local function applyLoadedSettings()
 	if savedData.keybinds then
 		for action, keyName in pairs(savedData.keybinds) do
 			if keyName and keyName ~= "None" then
+				-- Из файла приходит имя клавиши строкой — превращаем его
+				-- обратно в Enum.KeyCode. pcall защищает от неизвестных имён.
 				local ok, kc = pcall(function()
 					return Enum.KeyCode[keyName]
 				end)
@@ -1167,12 +1341,15 @@ local function applyLoadedSettings()
 	end
 end
 
+-- === ПОДПИСКИ НА СОБЫТИЯ ИГРОКОВ ===
+-- Подписываемся на респавн всех, кто уже в игре.
 for _, v in pairs(Players:GetPlayers()) do
 	if v ~= player then
 		setupCharacterAdded(v)
 	end
 end
 
+-- Новый игрок: подписка на респавн и применение активных функций.
 Players.PlayerAdded:Connect(function(newPlayer)
 	setupCharacterAdded(newPlayer)
 	task.wait(1)
@@ -1180,6 +1357,8 @@ Players.PlayerAdded:Connect(function(newPlayer)
 	if espEnabled then createESP(newPlayer) end
 end)
 
+-- Игрок вышел: убираем ESP, отключаем подписку и чистим таблицы,
+-- чтобы не копились ссылки на удалённые объекты.
 Players.PlayerRemoving:Connect(function(removedPlayer)
 	removeESP(removedPlayer)
 	if characterConnections[removedPlayer] then
@@ -1192,6 +1371,7 @@ Players.PlayerRemoving:Connect(function(removedPlayer)
 	end
 end)
 
+-- === ОБРАБОТЧИКИ КНОПОК ИНТЕРФЕЙСА ===
 applyButton.MouseButton1Click:Connect(function()
 	doApplyHitbox()
 end)
@@ -1206,6 +1386,7 @@ espToggleButton.MouseButton1Click:Connect(function()
 	doToggleESP()
 end)
 
+-- Переключение режима невидимых хитбоксов с мгновенным применением.
 disableTransparencyButton.MouseButton1Click:Connect(function()
 	animateButton(disableTransparencyButton)
 	disableTransparency = not disableTransparency
@@ -1225,6 +1406,8 @@ minimizeButton.MouseButton1Click:Connect(function()
 	doMinimize()
 end)
 
+-- Крестик: сначала разворачиваем меню (если свёрнуто), затем показываем
+-- окно подтверждения.
 closeButton.MouseButton1Click:Connect(function()
 	if confirmFrame.Visible or settingsFrame.Visible then return end
 	animateButton(closeButton)
@@ -1240,6 +1423,8 @@ closeButton.MouseButton1Click:Connect(function()
 	TweenService:Create(confirmFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundTransparency = 0.05}):Play()
 end)
 
+-- Подтверждение закрытия: выключаем все функции, восстанавливаем
+-- хитбоксы, отключаем подписки, схлопываем окно и удаляем GUI.
 yesButton.MouseButton1Click:Connect(function()
 	animateButton(yesButton)
 	isEnabled = false
@@ -1278,6 +1463,7 @@ noButton.MouseButton1Click:Connect(function()
 	confirmFrame.Visible = false
 end)
 
+-- Открытие настроек: меню разворачивается, панель выезжает справа.
 settingsButtonTop.MouseButton1Click:Connect(function()
 	if confirmFrame.Visible or settingsFrame.Visible then return end
 	animateButton(settingsButtonTop)
@@ -1294,6 +1480,7 @@ settingsButtonTop.MouseButton1Click:Connect(function()
 	TweenService:Create(settingsFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)}):Play()
 end)
 
+-- Закрытие настроек: сбрасываем ожидание клавиши и уезжаем вправо.
 backButton.MouseButton1Click:Connect(function()
 	animateButton(backButton)
 	if listeningFor then setListening(nil) end
@@ -1320,6 +1507,11 @@ footerLabelMinimized.MouseButton1Click:Connect(function()
 	animateButton(footerLabelMinimized)
 end)
 
+-- === ОБРАБОТКА КЛАВИАТУРЫ ===
+-- gameProcessed = true означает, что клавишу уже обработала игра
+-- (например, ввод в чат) — такие нажатия игнорируем.
+-- В режиме назначения клавиши: Escape отменяет, любая другая клавиша
+-- назначается. В обычном режиме — выполняем действие по кейбинду.
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
 	if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
@@ -1339,6 +1531,8 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if keybinds.apply and input.KeyCode == keybinds.apply then doApplyHitbox() end
 end)
 
+-- === ГЛАВНЫЙ ЦИКЛ ===
+-- Каждый кадр обновляем хитбоксы (если включены) и ESP.
 RunService.Heartbeat:Connect(function()
 	if isEnabled then
 		updateHitboxes()
@@ -1346,6 +1540,8 @@ RunService.Heartbeat:Connect(function()
 	updateESP()
 end)
 
+-- === ПЕРЕТАСКИВАНИЕ ОКНА ===
+-- Нажатие на панель заголовка запоминает стартовую точку и позицию окна.
 titleBar.InputBegan:Connect(function(input)
 	if not guiVisible then return end
 	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -1360,6 +1556,7 @@ titleBar.InputBegan:Connect(function(input)
 	end
 end)
 
+-- Запоминаем движение мыши/пальца именно над панелью заголовка.
 titleBar.InputChanged:Connect(function(input)
 	if not guiVisible then return end
 	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
@@ -1367,6 +1564,7 @@ titleBar.InputChanged:Connect(function(input)
 	end
 end)
 
+-- Пока кнопка зажата, двигаем окно на смещение от стартовой точки.
 UserInputService.InputChanged:Connect(function(input)
 	if not guiVisible then return end
 	if input == dragInput and isDragging then
@@ -1380,6 +1578,9 @@ UserInputService.InputChanged:Connect(function(input)
 	end
 end)
 
+-- === ЭФФЕКТЫ НАВЕДЕНИЯ МЫШИ ===
+-- Кнопки, у которых цвет зависит от состояния (ESP, прозрачность, тема),
+-- подсвечиваются с учётом текущего состояния и темы.
 applyButton.MouseEnter:Connect(function()
 	TweenService:Create(applyButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(100, 170, 255)}):Play()
 end)
@@ -1471,4 +1672,5 @@ disableTransparencyButton.MouseLeave:Connect(function()
 	end
 end)
 
+-- Запуск: применяем сохранённые настройки к готовому интерфейсу.
 applyLoadedSettings()
