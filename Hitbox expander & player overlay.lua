@@ -627,6 +627,7 @@ local viewportSizeConnection = nil
 local viewportClampScheduled = false
 local overlayData = {}
 local characterConnections = {}
+local trackedCharacters = {}
 local originalPartData = {}
 local serviceConnections = {}
 local animatingButtons = setmetatable({}, {__mode = "k"})
@@ -1046,14 +1047,18 @@ local function updatePlayerOverlays()
 				local data = overlayData[targetPlayer]
 				local currentDisplayName = tostring(targetPlayer.DisplayName or targetPlayer.Name)
 				local currentlyHasDisplayName = string.lower(currentDisplayName) ~= string.lower(targetPlayer.Name)
+				local expectedBillboardName = "PlayerOverlayBillboard_" .. targetPlayer.Name
+				local expectedHighlightName = "PlayerOverlayHighlight_" .. targetPlayer.Name
 				local needsRecreate = not data
 					or data.character ~= character
 					or data.attachPart ~= attachPart
 					or data.hasDisplayName ~= currentlyHasDisplayName
 					or not data.gui or data.gui.Parent ~= attachPart
+					or data.gui.Name ~= expectedBillboardName
 					or not data.infoLabel or data.infoLabel.Parent ~= data.gui
 					or data.hasDisplayName and (not data.displayLabel or data.displayLabel.Parent ~= data.gui)
 					or not data.highlight or data.highlight.Parent ~= character
+					or data.highlight.Name ~= expectedHighlightName
 					or data.highlight.Adornee ~= character
 
 				if needsRecreate then
@@ -1281,7 +1286,7 @@ local function doApplyExpansion()
 end
 
 local function clampMainFrameToViewport()
-	if isShuttingDown or not mainFrame.Parent or not screenGui.Parent then return end
+	if isShuttingDown or mainFrame.Parent ~= screenGui or screenGui.Parent ~= playerGui then return end
 
 	local canvasPosition = screenGui.AbsolutePosition
 	local canvasSize = screenGui.AbsoluteSize
@@ -1353,7 +1358,7 @@ local function doToggleOverlay()
 end
 
 local function doToggleGui()
-	if isShuttingDown or not mainFrame.Parent then return end
+	if isShuttingDown or mainFrame.Parent ~= screenGui or screenGui.Parent ~= playerGui then return end
 	guiVisible = not guiVisible
 	mainFrame.Visible = guiVisible
 	if guiVisible then task.defer(clampMainFrameToViewport) end
@@ -1393,17 +1398,22 @@ end
 
 local function disconnectCharacterTracking(targetPlayer)
 	local connections = characterConnections[targetPlayer]
-	if not connections then return end
+	if not connections then
+		trackedCharacters[targetPlayer] = nil
+		return
+	end
 	for _, connection in pairs(connections) do
 		disconnectConnection(connection)
 	end
 	characterConnections[targetPlayer] = nil
+	trackedCharacters[targetPlayer] = nil
 end
 
 local function handleCharacterAdded(targetPlayer, character)
 	if isShuttingDown or not character then return end
 	restorePlayerParts(targetPlayer)
 	removePlayerOverlay(targetPlayer)
+	removeManagedOverlayInstances(targetPlayer, character)
 	if expanderEnabled then updateExpandedParts() end
 	if overlayEnabled then updatePlayerOverlays() end
 end
@@ -1422,12 +1432,23 @@ local function setupCharacterTracking(targetPlayer)
 	disconnectCharacterTracking(targetPlayer)
 	characterConnections[targetPlayer] = {
 		added = targetPlayer.CharacterAdded:Connect(function(character)
+			if trackedCharacters[targetPlayer] == character then return end
+			trackedCharacters[targetPlayer] = character
 			handleCharacterAdded(targetPlayer, character)
 		end),
 		removing = targetPlayer.CharacterRemoving:Connect(function(character)
+			if trackedCharacters[targetPlayer] == character then
+				trackedCharacters[targetPlayer] = nil
+			end
 			handleCharacterRemoving(targetPlayer, character)
 		end),
 	}
+
+	local currentCharacter = targetPlayer.Character
+	if currentCharacter then
+		trackedCharacters[targetPlayer] = currentCharacter
+		handleCharacterAdded(targetPlayer, currentCharacter)
+	end
 end
 
 local function applyLoadedSettings()
@@ -1525,6 +1546,7 @@ local function shutdownRuntime(animateClose, guiAlreadyDestroying)
 	for _, targetPlayer in ipairs(trackedPlayers) do
 		disconnectCharacterTracking(targetPlayer)
 	end
+	table.clear(trackedCharacters)
 	for _, connection in ipairs(serviceConnections) do
 		disconnectConnection(connection)
 	end
@@ -1566,13 +1588,17 @@ trackServiceConnection(screenGui.Destroying:Connect(function()
 		shutdownRuntime(false, true)
 	end
 end))
+trackServiceConnection(mainFrame.Destroying:Connect(function()
+	task.defer(function()
+		if not isShuttingDown and mainFrame.Parent ~= screenGui then
+			shutdownRuntime(false)
+		end
+	end)
+end))
 screenGui.Parent = playerGui
 
 for _, targetPlayer in ipairs(Players:GetPlayers()) do
 	if targetPlayer ~= player then
-		if targetPlayer.Character then
-			removeManagedOverlayInstances(targetPlayer, targetPlayer.Character)
-		end
 		setupCharacterTracking(targetPlayer)
 	end
 end
@@ -1580,9 +1606,6 @@ end
 trackServiceConnection(Players.PlayerAdded:Connect(function(newPlayer)
 	if isShuttingDown then return end
 	setupCharacterTracking(newPlayer)
-	if newPlayer.Character then
-		handleCharacterAdded(newPlayer, newPlayer.Character)
-	end
 end))
 
 trackServiceConnection(Players.PlayerRemoving:Connect(function(removedPlayer)
@@ -1748,7 +1771,7 @@ end))
 
 trackServiceConnection(RunService.Heartbeat:Connect(function(deltaTime)
 	if isShuttingDown then return end
-	if not screenGui.Parent then
+	if screenGui.Parent ~= playerGui or mainFrame.Parent ~= screenGui then
 		shutdownRuntime(false)
 		return
 	end
