@@ -1,9 +1,9 @@
 
-Universal Roblox Hitbox Changer & ESP with clean GUI.
+Universal Roblox Hitbox expander with clean GUI.
 
 ## Features
-- Hitbox Changer (custom size)
-- ESP (Name + Distance + Highlight)
+- Hitbox expander (custom size)
+- Player Overlay (Name + Distance + Highlight)
 - Clean animated GUI
 - Dark / Light theme
 - Minimize & Settings
