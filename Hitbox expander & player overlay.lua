@@ -1569,8 +1569,8 @@ local function shutdownRuntime(animateClose, guiAlreadyDestroying)
 	disconnectConnection(viewportSizeConnection)
 	viewportSizeConnection = nil
 
-	forceRestoreAllExpandedParts()
-	removeAllPlayerOverlays()
+	pcall(forceRestoreAllExpandedParts)
+	pcall(removeAllPlayerOverlays)
 
 	local trackedPlayers = {}
 	for targetPlayer in pairs(characterConnections) do
@@ -1591,17 +1591,19 @@ local function shutdownRuntime(animateClose, guiAlreadyDestroying)
 		end
 	end)
 
-	if animateClose and screenGui.Parent and mainFrame.Parent then
-		TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
-			Size = UDim2.new(0, 0, 0, 0),
-			Position = UDim2.new(
-				mainFrame.Position.X.Scale,
-				mainFrame.Position.X.Offset + 130,
-				mainFrame.Position.Y.Scale,
-				mainFrame.Position.Y.Offset + 90
-			),
-		}):Play()
-		task.wait(0.3)
+	if animateClose and isRuntimeGuiMounted() then
+		local animationStarted = pcall(function()
+			TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+				Size = UDim2.new(0, 0, 0, 0),
+				Position = UDim2.new(
+					mainFrame.Position.X.Scale,
+					mainFrame.Position.X.Offset + 130,
+					mainFrame.Position.Y.Scale,
+					mainFrame.Position.Y.Offset + 90
+				),
+			}):Play()
+		end)
+		if animationStarted then task.wait(0.3) end
 	end
 
 	if not guiAlreadyDestroying then
