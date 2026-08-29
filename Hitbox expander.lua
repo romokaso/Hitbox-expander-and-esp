@@ -6,20 +6,21 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
-local SAVE_FILE = "hitbox_settings.json"
+local APP_NAME = "Hitbox expander"
+local SETTINGS_FILE = "hitbox_expander_settings.json"
 
 local function saveSettings(data)
 	pcall(function()
 		if writefile then
-			writefile(SAVE_FILE, game:GetService("HttpService"):JSONEncode(data))
+			writefile(SETTINGS_FILE, game:GetService("HttpService"):JSONEncode(data))
 		end
 	end)
 end
 
 local function loadSettings()
 	local ok, result = pcall(function()
-		if readfile and isfile and isfile(SAVE_FILE) then
-			return game:GetService("HttpService"):JSONDecode(readfile(SAVE_FILE))
+		if readfile and isfile and isfile(SETTINGS_FILE) then
+			return game:GetService("HttpService"):JSONDecode(readfile(SETTINGS_FILE))
 		end
 		return nil
 	end)
@@ -30,7 +31,7 @@ end
 local savedData = loadSettings()
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "HitboxChanger"
+screenGui.Name = "HitboxExpander"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
@@ -77,7 +78,7 @@ local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, -100, 1, 0)
 titleLabel.Position = UDim2.new(0, 10, 0, 0)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "Hitbox changer & esp"
+titleLabel.Text = APP_NAME
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 15
 titleLabel.Font = Enum.Font.GothamBold
@@ -140,88 +141,88 @@ contentFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 contentFrame.BorderSizePixel = 0
 contentFrame.Parent = mainFrame
 
-local sizeLabel = Instance.new("TextLabel")
-sizeLabel.Size = UDim2.new(0, 75, 0, 22)
-sizeLabel.Position = UDim2.new(0, 12, 0, 8)
-sizeLabel.BackgroundTransparency = 1
-sizeLabel.Text = "Hitbox Size:"
-sizeLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
-sizeLabel.TextSize = 12
-sizeLabel.Font = Enum.Font.Gotham
-sizeLabel.TextXAlignment = Enum.TextXAlignment.Left
-sizeLabel.Parent = contentFrame
+local expansionSizeLabel = Instance.new("TextLabel")
+expansionSizeLabel.Size = UDim2.new(0, 88, 0, 22)
+expansionSizeLabel.Position = UDim2.new(0, 12, 0, 8)
+expansionSizeLabel.BackgroundTransparency = 1
+expansionSizeLabel.Text = "Expansion size:"
+expansionSizeLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
+expansionSizeLabel.TextSize = 12
+expansionSizeLabel.Font = Enum.Font.Gotham
+expansionSizeLabel.TextXAlignment = Enum.TextXAlignment.Left
+expansionSizeLabel.Parent = contentFrame
 
-local textBox = Instance.new("TextBox")
-textBox.Size = UDim2.new(0, 80, 0, 28)
-textBox.Position = UDim2.new(0, 90, 0, 6)
-textBox.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-textBox.BorderSizePixel = 0
-textBox.Text = "10"
-textBox.PlaceholderText = "Size"
-textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-textBox.TextSize = 12
-textBox.Font = Enum.Font.Gotham
-textBox.Parent = contentFrame
+local expansionSizeInput = Instance.new("TextBox")
+expansionSizeInput.Size = UDim2.new(0, 60, 0, 28)
+expansionSizeInput.Position = UDim2.new(0, 104, 0, 6)
+expansionSizeInput.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+expansionSizeInput.BorderSizePixel = 0
+expansionSizeInput.Text = "10"
+expansionSizeInput.PlaceholderText = "Size"
+expansionSizeInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+expansionSizeInput.TextSize = 12
+expansionSizeInput.Font = Enum.Font.Gotham
+expansionSizeInput.Parent = contentFrame
 
-local textBoxCorner = Instance.new("UICorner")
-textBoxCorner.CornerRadius = UDim.new(0, 7)
-textBoxCorner.Parent = textBox
+local expansionSizeInputCorner = Instance.new("UICorner")
+expansionSizeInputCorner.CornerRadius = UDim.new(0, 7)
+expansionSizeInputCorner.Parent = expansionSizeInput
 
-local textBoxStroke = Instance.new("UIStroke")
-textBoxStroke.Color = Color3.fromRGB(80, 80, 90)
-textBoxStroke.Thickness = 1
-textBoxStroke.Parent = textBox
+local expansionSizeInputStroke = Instance.new("UIStroke")
+expansionSizeInputStroke.Color = Color3.fromRGB(80, 80, 90)
+expansionSizeInputStroke.Thickness = 1
+expansionSizeInputStroke.Parent = expansionSizeInput
 
-local applyButton = Instance.new("TextButton")
-applyButton.Size = UDim2.new(0, 50, 0, 28)
-applyButton.Position = UDim2.new(0, 178, 0, 6)
-applyButton.BackgroundColor3 = Color3.fromRGB(80, 150, 255)
-applyButton.BorderSizePixel = 0
-applyButton.Text = "Apply"
-applyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-applyButton.TextSize = 12
-applyButton.Font = Enum.Font.GothamBold
-applyButton.Parent = contentFrame
+local applyExpansionButton = Instance.new("TextButton")
+applyExpansionButton.Size = UDim2.new(0, 76, 0, 28)
+applyExpansionButton.Position = UDim2.new(0, 172, 0, 6)
+applyExpansionButton.BackgroundColor3 = Color3.fromRGB(80, 150, 255)
+applyExpansionButton.BorderSizePixel = 0
+applyExpansionButton.Text = "Apply"
+applyExpansionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+applyExpansionButton.TextSize = 12
+applyExpansionButton.Font = Enum.Font.GothamBold
+applyExpansionButton.Parent = contentFrame
 
-local applyCorner = Instance.new("UICorner")
-applyCorner.CornerRadius = UDim.new(0, 7)
-applyCorner.Parent = applyButton
+local applyExpansionCorner = Instance.new("UICorner")
+applyExpansionCorner.CornerRadius = UDim.new(0, 7)
+applyExpansionCorner.Parent = applyExpansionButton
 
-local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(0, 236, 0, 32)
-toggleButton.Position = UDim2.new(0, 12, 0, 42)
-toggleButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
-toggleButton.BorderSizePixel = 0
-toggleButton.Text = "Hitbox: OFF"
-toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleButton.TextSize = 13
-toggleButton.Font = Enum.Font.GothamBold
-toggleButton.Parent = contentFrame
+local expanderToggleButton = Instance.new("TextButton")
+expanderToggleButton.Size = UDim2.new(0, 236, 0, 32)
+expanderToggleButton.Position = UDim2.new(0, 12, 0, 42)
+expanderToggleButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+expanderToggleButton.BorderSizePixel = 0
+expanderToggleButton.Text = APP_NAME .. ": OFF"
+expanderToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+expanderToggleButton.TextSize = 13
+expanderToggleButton.Font = Enum.Font.GothamBold
+expanderToggleButton.Parent = contentFrame
 
-local toggleCorner = Instance.new("UICorner")
-toggleCorner.CornerRadius = UDim.new(0, 7)
-toggleCorner.Parent = toggleButton
+local expanderToggleCorner = Instance.new("UICorner")
+expanderToggleCorner.CornerRadius = UDim.new(0, 7)
+expanderToggleCorner.Parent = expanderToggleButton
 
-local espToggleButton = Instance.new("TextButton")
-espToggleButton.Size = UDim2.new(0, 236, 0, 32)
-espToggleButton.Position = UDim2.new(0, 12, 0, 80)
-espToggleButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
-espToggleButton.BorderSizePixel = 0
-espToggleButton.Text = "ESP: OFF"
-espToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-espToggleButton.TextSize = 13
-espToggleButton.Font = Enum.Font.GothamBold
-espToggleButton.Parent = contentFrame
+local overlayToggleButton = Instance.new("TextButton")
+overlayToggleButton.Size = UDim2.new(0, 236, 0, 32)
+overlayToggleButton.Position = UDim2.new(0, 12, 0, 80)
+overlayToggleButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+overlayToggleButton.BorderSizePixel = 0
+overlayToggleButton.Text = "Player overlay: OFF"
+overlayToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+overlayToggleButton.TextSize = 13
+overlayToggleButton.Font = Enum.Font.GothamBold
+overlayToggleButton.Parent = contentFrame
 
-local espToggleCorner = Instance.new("UICorner")
-espToggleCorner.CornerRadius = UDim.new(0, 7)
-espToggleCorner.Parent = espToggleButton
+local overlayToggleCorner = Instance.new("UICorner")
+overlayToggleCorner.CornerRadius = UDim.new(0, 7)
+overlayToggleCorner.Parent = overlayToggleButton
 
 local footerLabel = Instance.new("TextButton")
 footerLabel.Size = UDim2.new(1, 0, 0, 25)
 footerLabel.Position = UDim2.new(0, 0, 1, -25)
 footerLabel.BackgroundTransparency = 1
-footerLabel.Text = "by: romokaso"
+footerLabel.Text = APP_NAME .. " • by romokaso"
 footerLabel.TextColor3 = Color3.fromRGB(120, 120, 130)
 footerLabel.TextSize = 10
 footerLabel.Font = Enum.Font.GothamBold
@@ -231,7 +232,7 @@ local footerLabelMinimized = Instance.new("TextButton")
 footerLabelMinimized.Size = UDim2.new(1, 0, 0, 25)
 footerLabelMinimized.Position = UDim2.new(0, 0, 0, 35)
 footerLabelMinimized.BackgroundTransparency = 1
-footerLabelMinimized.Text = "by: romokaso"
+footerLabelMinimized.Text = APP_NAME .. " • by romokaso"
 footerLabelMinimized.TextColor3 = Color3.fromRGB(120, 120, 130)
 footerLabelMinimized.TextSize = 10
 footerLabelMinimized.Font = Enum.Font.GothamBold
@@ -257,7 +258,7 @@ local confirmText = Instance.new("TextLabel")
 confirmText.Size = UDim2.new(1, -24, 0, 40)
 confirmText.Position = UDim2.new(0, 12, 0, 45)
 confirmText.BackgroundTransparency = 1
-confirmText.Text = "Are you sure you want\nto close the GUI?"
+confirmText.Text = "Are you sure you want\nto close " .. APP_NAME .. "?"
 confirmText.TextColor3 = Color3.fromRGB(255, 255, 255)
 confirmText.TextSize = 13
 confirmText.Font = Enum.Font.GothamBold
@@ -497,65 +498,65 @@ local function makeKeybindRow(labelText, yPos)
 	return rowLabel, rowButton, rowStroke
 end
 
-local keybindHitboxLabel, keybindHitboxButton, keybindHitboxStroke = makeKeybindRow("Toggle Hitbox:", 142)
-local keybindEspLabel, keybindEspButton, keybindEspStroke = makeKeybindRow("Toggle ESP:", 178)
+local keybindExpanderLabel, keybindExpanderButton, keybindExpanderStroke = makeKeybindRow("Toggle expander:", 142)
+local keybindOverlayLabel, keybindOverlayButton, keybindOverlayStroke = makeKeybindRow("Toggle overlay:", 178)
 local keybindGuiLabel, keybindGuiButton, keybindGuiStroke = makeKeybindRow("Toggle GUI:", 214)
 local keybindMinimizeLabel, keybindMinimizeButton, keybindMinimizeStroke = makeKeybindRow("Minimize:", 250)
-local keybindApplyLabel, keybindApplyButton, keybindApplyStroke = makeKeybindRow("Apply Hitbox:", 286)
+local keybindApplyExpansionLabel, keybindApplyExpansionButton, keybindApplyExpansionStroke = makeKeybindRow("Apply expansion:", 286)
 
-local hitboxSize = 10
-local isEnabled = false
+local expansionSize = 10
+local expanderEnabled = false
 local isMinimized = false
 local currentTheme = "dark"
 local isDragging = false
 local dragInput = nil
 local dragStart = nil
 local startPos = nil
-local espEnabled = false
-local espData = {}
+local overlayEnabled = false
+local overlayData = {}
 local lastAnimTime = 0
 local animCooldown = 0.15
 local disableTransparency = false
 local characterConnections = {}
-local originalData = {}
+local originalPartData = {}
 local guiVisible = true
-local modifiedChars = {}
+local expandedCharacters = {}
 
 local keybinds = {
-	hitbox = nil,
-	esp = nil,
+	expander = nil,
+	overlay = nil,
 	gui = nil,
 	minimize = nil,
-	apply = nil,
+	applyExpansion = nil,
 }
 
 local listeningFor = nil
 
 local keybindButtons = {
-	hitbox = keybindHitboxButton,
-	esp = keybindEspButton,
+	expander = keybindExpanderButton,
+	overlay = keybindOverlayButton,
 	gui = keybindGuiButton,
 	minimize = keybindMinimizeButton,
-	apply = keybindApplyButton,
+	applyExpansion = keybindApplyExpansionButton,
 }
 
 local keybindStrokes = {
-	hitbox = keybindHitboxStroke,
-	esp = keybindEspStroke,
+	expander = keybindExpanderStroke,
+	overlay = keybindOverlayStroke,
 	gui = keybindGuiStroke,
 	minimize = keybindMinimizeStroke,
-	apply = keybindApplyStroke,
+	applyExpansion = keybindApplyExpansionStroke,
 }
 
 local keybindLabels = {
-	hitbox = keybindHitboxLabel,
-	esp = keybindEspLabel,
+	expander = keybindExpanderLabel,
+	overlay = keybindOverlayLabel,
 	gui = keybindGuiLabel,
 	minimize = keybindMinimizeLabel,
-	apply = keybindApplyLabel,
+	applyExpansion = keybindApplyExpansionLabel,
 }
 
-local hitboxPartNames = {
+local expandablePartNames = {
 	"HumanoidRootPart", "Head", "Torso",
 	"Left Arm", "Right Arm", "Left Leg", "Right Leg",
 	"UpperTorso", "LowerTorso",
@@ -572,7 +573,7 @@ end
 
 local function collectAndSave()
 	local data = {
-		hitboxSize = hitboxSize,
+		expansionSize = expansionSize,
 		theme = currentTheme,
 		disableTransparency = disableTransparency,
 		keybinds = {}
@@ -672,9 +673,9 @@ local function applyTheme(theme)
 		TweenService:Create(titleBar, tweenInfo, {BackgroundColor3 = Color3.fromRGB(245, 245, 250)}):Play()
 		TweenService:Create(titleFix, tweenInfo, {BackgroundColor3 = Color3.fromRGB(245, 245, 250)}):Play()
 		TweenService:Create(titleLabel, tweenInfo, {TextColor3 = Color3.fromRGB(30, 30, 40)}):Play()
-		TweenService:Create(sizeLabel, tweenInfo, {TextColor3 = Color3.fromRGB(60, 60, 70)}):Play()
-		TweenService:Create(textBox, tweenInfo, {BackgroundColor3 = Color3.fromRGB(235, 235, 245), TextColor3 = Color3.fromRGB(30, 30, 40)}):Play()
-		TweenService:Create(textBoxStroke, tweenInfo, {Color = Color3.fromRGB(200, 200, 210)}):Play()
+		TweenService:Create(expansionSizeLabel, tweenInfo, {TextColor3 = Color3.fromRGB(60, 60, 70)}):Play()
+		TweenService:Create(expansionSizeInput, tweenInfo, {BackgroundColor3 = Color3.fromRGB(235, 235, 245), TextColor3 = Color3.fromRGB(30, 30, 40)}):Play()
+		TweenService:Create(expansionSizeInputStroke, tweenInfo, {Color = Color3.fromRGB(200, 200, 210)}):Play()
 		TweenService:Create(footerLabel, tweenInfo, {TextColor3 = Color3.fromRGB(100, 100, 110)}):Play()
 		TweenService:Create(footerLabelMinimized, tweenInfo, {TextColor3 = Color3.fromRGB(100, 100, 110)}):Play()
 		TweenService:Create(confirmFrame, tweenInfo, {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
@@ -708,9 +709,9 @@ local function applyTheme(theme)
 		TweenService:Create(titleBar, tweenInfo, {BackgroundColor3 = Color3.fromRGB(30, 30, 40)}):Play()
 		TweenService:Create(titleFix, tweenInfo, {BackgroundColor3 = Color3.fromRGB(30, 30, 40)}):Play()
 		TweenService:Create(titleLabel, tweenInfo, {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-		TweenService:Create(sizeLabel, tweenInfo, {TextColor3 = Color3.fromRGB(200, 200, 210)}):Play()
-		TweenService:Create(textBox, tweenInfo, {BackgroundColor3 = Color3.fromRGB(40, 40, 50), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-		TweenService:Create(textBoxStroke, tweenInfo, {Color = Color3.fromRGB(80, 80, 90)}):Play()
+		TweenService:Create(expansionSizeLabel, tweenInfo, {TextColor3 = Color3.fromRGB(200, 200, 210)}):Play()
+		TweenService:Create(expansionSizeInput, tweenInfo, {BackgroundColor3 = Color3.fromRGB(40, 40, 50), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+		TweenService:Create(expansionSizeInputStroke, tweenInfo, {Color = Color3.fromRGB(80, 80, 90)}):Play()
 		TweenService:Create(footerLabel, tweenInfo, {TextColor3 = Color3.fromRGB(120, 120, 130)}):Play()
 		TweenService:Create(footerLabelMinimized, tweenInfo, {TextColor3 = Color3.fromRGB(120, 120, 130)}):Play()
 		TweenService:Create(confirmFrame, tweenInfo, {BackgroundColor3 = Color3.fromRGB(15, 15, 20)}):Play()
@@ -738,21 +739,21 @@ local function applyTheme(theme)
 	collectAndSave()
 end
 
-local function removeESP(targetPlayer)
-	if espData[targetPlayer] then
-		if espData[targetPlayer].gui and espData[targetPlayer].gui.Parent then
-			espData[targetPlayer].gui:Destroy()
+local function removePlayerOverlay(targetPlayer)
+	if overlayData[targetPlayer] then
+		if overlayData[targetPlayer].gui and overlayData[targetPlayer].gui.Parent then
+			overlayData[targetPlayer].gui:Destroy()
 		end
-		if espData[targetPlayer].highlight and espData[targetPlayer].highlight.Parent then
-			espData[targetPlayer].highlight:Destroy()
+		if overlayData[targetPlayer].highlight and overlayData[targetPlayer].highlight.Parent then
+			overlayData[targetPlayer].highlight:Destroy()
 		end
-		espData[targetPlayer] = nil
+		overlayData[targetPlayer] = nil
 	end
 end
 
-local function createESP(targetPlayer)
+local function createPlayerOverlay(targetPlayer)
 	if targetPlayer == player then return end
-	removeESP(targetPlayer)
+	removePlayerOverlay(targetPlayer)
 	local char = targetPlayer.Character
 	if not char then return end
 	local head = char:FindFirstChild("Head")
@@ -765,7 +766,7 @@ local function createESP(targetPlayer)
 	local hasDisplayName = string.lower(targetPlayer.DisplayName) ~= string.lower(targetPlayer.Name)
 	local guiHeight = hasDisplayName and 36 or 20
 	local billboardGui = Instance.new("BillboardGui")
-	billboardGui.Name = "ESP_" .. targetPlayer.Name
+	billboardGui.Name = "HitboxExpanderOverlay_" .. targetPlayer.Name
 	billboardGui.AlwaysOnTop = true
 	billboardGui.Size = UDim2.new(0, 300, 0, guiHeight)
 	billboardGui.StudsOffset = Vector3.new(0, 3.2, 0)
@@ -797,7 +798,7 @@ local function createESP(targetPlayer)
 		infoLabel.Text = ""
 		infoLabel.TextXAlignment = Enum.TextXAlignment.Center
 		infoLabel.Parent = billboardGui
-		espData[targetPlayer] = {gui = billboardGui, displayLabel = displayLabel, infoLabel = infoLabel, highlight = nil, hasDisplayName = true}
+		overlayData[targetPlayer] = {gui = billboardGui, displayLabel = displayLabel, infoLabel = infoLabel, highlight = nil, hasDisplayName = true}
 	else
 		local textLabel = Instance.new("TextLabel")
 		textLabel.Name = "InfoLabel"
@@ -811,39 +812,39 @@ local function createESP(targetPlayer)
 		textLabel.Text = ""
 		textLabel.TextXAlignment = Enum.TextXAlignment.Center
 		textLabel.Parent = billboardGui
-		espData[targetPlayer] = {gui = billboardGui, displayLabel = nil, infoLabel = textLabel, highlight = nil, hasDisplayName = false}
+		overlayData[targetPlayer] = {gui = billboardGui, displayLabel = nil, infoLabel = textLabel, highlight = nil, hasDisplayName = false}
 	end
 	local highlight = Instance.new("Highlight")
-	highlight.Name = "ESPHighlight_" .. targetPlayer.Name
+	highlight.Name = "HitboxExpanderHighlight_" .. targetPlayer.Name
 	highlight.Adornee = char
 	highlight.FillColor = teamColor
 	highlight.OutlineColor = teamColor
 	highlight.FillTransparency = 0.5
 	highlight.OutlineTransparency = 0
 	highlight.Parent = char
-	espData[targetPlayer].highlight = highlight
+	overlayData[targetPlayer].highlight = highlight
 end
 
-local function updateESP()
-	if not espEnabled then return end
+local function updatePlayerOverlays()
+	if not overlayEnabled then return end
 	for _, targetPlayer in pairs(Players:GetPlayers()) do
 		if targetPlayer ~= player then
 			local char = targetPlayer.Character
 			if char and (char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart")) then
 				local humanoid = char:FindFirstChildOfClass("Humanoid")
 				if humanoid and humanoid.Health <= 0 then
-					removeESP(targetPlayer)
+					removePlayerOverlay(targetPlayer)
 				else
 					local needsRecreate = false
-					if not espData[targetPlayer] then
+					if not overlayData[targetPlayer] then
 						needsRecreate = true
-					elseif not espData[targetPlayer].gui or not espData[targetPlayer].gui.Parent then
+					elseif not overlayData[targetPlayer].gui or not overlayData[targetPlayer].gui.Parent then
 						needsRecreate = true
-					elseif not espData[targetPlayer].highlight or not espData[targetPlayer].highlight.Parent then
+					elseif not overlayData[targetPlayer].highlight or not overlayData[targetPlayer].highlight.Parent then
 						needsRecreate = true
 					end
-					if needsRecreate then createESP(targetPlayer) end
-					local data = espData[targetPlayer]
+					if needsRecreate then createPlayerOverlay(targetPlayer) end
+					local data = overlayData[targetPlayer]
 					if data and data.infoLabel then
 						local teamColor = getTeamColor(targetPlayer)
 						local myHrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
@@ -870,24 +871,24 @@ local function updateESP()
 					end
 				end
 			else
-				removeESP(targetPlayer)
+				removePlayerOverlay(targetPlayer)
 			end
 		end
 	end
 	local toClean = {}
-	for targetPlayer in pairs(espData) do
+	for targetPlayer in pairs(overlayData) do
 		if not targetPlayer or not targetPlayer.Parent then
 			table.insert(toClean, targetPlayer)
 		end
 	end
 	for _, targetPlayer in pairs(toClean) do
-		removeESP(targetPlayer)
+		removePlayerOverlay(targetPlayer)
 	end
 end
 
-local function saveOriginalData(char)
+local function saveOriginalPartData(char)
 	if not char then return end
-	if originalData[char] then return end
+	if originalPartData[char] then return end
 	local data = {}
 	local valid = false
 	for _, child in pairs(char:GetChildren()) do
@@ -904,13 +905,13 @@ local function saveOriginalData(char)
 		end
 	end
 	if valid then
-		originalData[char] = data
+		originalPartData[char] = data
 	end
 end
 
-local function restoreOriginalData(char)
+local function restoreOriginalPartData(char)
 	if not char or not char.Parent then return end
-	local saved = originalData[char]
+	local saved = originalPartData[char]
 	if not saved then return end
 	for partName, data in pairs(saved) do
 		local part = char:FindFirstChild(partName)
@@ -923,18 +924,18 @@ local function restoreOriginalData(char)
 			part.CastShadow = data.CastShadow
 		end
 	end
-	originalData[char] = nil
-	modifiedChars[char] = nil
+	originalPartData[char] = nil
+	expandedCharacters[char] = nil
 end
 
-local function forceRestoreAllHitboxes()
+local function forceRestoreAllExpandedParts()
 	for _, v in pairs(Players:GetPlayers()) do
 		if v ~= player and v.Character then
 			local char = v.Character
-			if originalData[char] then
-				restoreOriginalData(char)
+			if originalPartData[char] then
+				restoreOriginalPartData(char)
 			else
-				for _, partName in pairs(hitboxPartNames) do
+				for _, partName in pairs(expandablePartNames) do
 					local part = char:FindFirstChild(partName)
 					if part and part:IsA("BasePart") then
 						local humanoidDesc = v:FindFirstChildOfClass("HumanoidDescription")
@@ -948,50 +949,50 @@ local function forceRestoreAllHitboxes()
 		end
 	end
 	local toClean = {}
-	for char in pairs(originalData) do
+	for char in pairs(originalPartData) do
 		table.insert(toClean, char)
 	end
 	for _, char in pairs(toClean) do
-		originalData[char] = nil
+		originalPartData[char] = nil
 	end
 	local toClean2 = {}
-	for char in pairs(modifiedChars) do
+	for char in pairs(expandedCharacters) do
 		table.insert(toClean2, char)
 	end
 	for _, char in pairs(toClean2) do
-		modifiedChars[char] = nil
+		expandedCharacters[char] = nil
 	end
 end
 
-local function updateHitboxes()
-	if not isEnabled then return end
+local function updateExpandedParts()
+	if not expanderEnabled then return end
 	for _, v in pairs(Players:GetPlayers()) do
 		if v ~= player and v.Character then
 			local char = v.Character
 			if not char.Parent then continue end
 			local humanoid = char:FindFirstChildOfClass("Humanoid")
 			if not humanoid or humanoid.Health <= 0 then continue end
-			if not originalData[char] then
-				saveOriginalData(char)
+			if not originalPartData[char] then
+				saveOriginalPartData(char)
 			end
-			if not originalData[char] then continue end
-			modifiedChars[char] = v
+			if not originalPartData[char] then continue end
+			expandedCharacters[char] = v
 			local teamColor = getTeamColor(v)
-			for _, partName in pairs(hitboxPartNames) do
+			for _, partName in pairs(expandablePartNames) do
 				local part = char:FindFirstChild(partName)
 				if part and part:IsA("BasePart") then
 					if partName == "HumanoidRootPart" then
-						part.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
+						part.Size = Vector3.new(expansionSize, expansionSize, expansionSize)
 						part.Transparency = 1
 						part.CanCollide = false
 					elseif partName == "Head" then
-						part.Size = Vector3.new(hitboxSize * 0.8, hitboxSize * 0.8, hitboxSize * 0.8)
+						part.Size = Vector3.new(expansionSize * 0.8, expansionSize * 0.8, expansionSize * 0.8)
 						part.CanCollide = false
 						part.Color = teamColor
 						part.Material = Enum.Material.ForceField
 						part.Transparency = disableTransparency and 1 or 0.7
 					else
-						part.Size = Vector3.new(hitboxSize * 0.7, hitboxSize * 0.7, hitboxSize * 0.7)
+						part.Size = Vector3.new(expansionSize * 0.7, expansionSize * 0.7, expansionSize * 0.7)
 						part.CanCollide = false
 						part.Color = teamColor
 						part.Material = Enum.Material.ForceField
@@ -1002,55 +1003,55 @@ local function updateHitboxes()
 		end
 	end
 	local toClean = {}
-	for char in pairs(originalData) do
+	for char in pairs(originalPartData) do
 		if not char or not char.Parent then
 			table.insert(toClean, char)
 		end
 	end
 	for _, char in pairs(toClean) do
-		originalData[char] = nil
-		modifiedChars[char] = nil
+		originalPartData[char] = nil
+		expandedCharacters[char] = nil
 	end
 end
 
-local function resetHitboxes()
+local function resetExpandedParts()
 	for _, v in pairs(Players:GetPlayers()) do
 		if v ~= player and v.Character then
-			restoreOriginalData(v.Character)
+			restoreOriginalPartData(v.Character)
 		end
 	end
 	local toClean = {}
-	for char in pairs(originalData) do
+	for char in pairs(originalPartData) do
 		table.insert(toClean, char)
 	end
 	for _, char in pairs(toClean) do
-		originalData[char] = nil
-		modifiedChars[char] = nil
+		originalPartData[char] = nil
+		expandedCharacters[char] = nil
 	end
 end
 
-local function doApplyHitbox()
-	local inputValue = tonumber(textBox.Text)
+local function doApplyExpansion()
+	local inputValue = tonumber(expansionSizeInput.Text)
 	if inputValue then
-		hitboxSize = math.max(1, inputValue)
-		textBox.Text = tostring(hitboxSize)
-		if isEnabled then
-			updateHitboxes()
+		expansionSize = math.max(1, inputValue)
+		expansionSizeInput.Text = tostring(expansionSize)
+		if expanderEnabled then
+			updateExpandedParts()
 		end
 		collectAndSave()
-		animateButton(applyButton)
-		TweenService:Create(applyButton, TweenInfo.new(0.08), {BackgroundColor3 = Color3.fromRGB(50, 220, 120)}):Play()
+		animateButton(applyExpansionButton)
+		TweenService:Create(applyExpansionButton, TweenInfo.new(0.08), {BackgroundColor3 = Color3.fromRGB(50, 220, 120)}):Play()
 		task.delay(0.25, function()
-			if applyButton and applyButton.Parent then
-				TweenService:Create(applyButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(80, 150, 255)}):Play()
+			if applyExpansionButton and applyExpansionButton.Parent then
+				TweenService:Create(applyExpansionButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(80, 150, 255)}):Play()
 			end
 		end)
 	else
-		TweenService:Create(textBoxStroke, TweenInfo.new(0.08), {Color = Color3.fromRGB(220, 50, 50)}):Play()
+		TweenService:Create(expansionSizeInputStroke, TweenInfo.new(0.08), {Color = Color3.fromRGB(220, 50, 50)}):Play()
 		task.delay(0.4, function()
-			if textBoxStroke and textBoxStroke.Parent then
+			if expansionSizeInputStroke and expansionSizeInputStroke.Parent then
 				local col = currentTheme == "light" and Color3.fromRGB(200, 200, 210) or Color3.fromRGB(80, 80, 90)
-				TweenService:Create(textBoxStroke, TweenInfo.new(0.1), {Color = col}):Play()
+				TweenService:Create(expansionSizeInputStroke, TweenInfo.new(0.1), {Color = col}):Play()
 			end
 		end)
 	end
@@ -1072,36 +1073,36 @@ local function doMinimize()
 	end
 end
 
-local function doToggleHitbox()
-	isEnabled = not isEnabled
-	if isEnabled then
-		TweenService:Create(toggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(50, 200, 100)}):Play()
-		toggleButton.Text = "Hitbox: ON"
-		updateHitboxes()
+local function doToggleExpander()
+	expanderEnabled = not expanderEnabled
+	if expanderEnabled then
+		TweenService:Create(expanderToggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(50, 200, 100)}):Play()
+		expanderToggleButton.Text = APP_NAME .. ": ON"
+		updateExpandedParts()
 	else
-		TweenService:Create(toggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(220, 50, 50)}):Play()
-		toggleButton.Text = "Hitbox: OFF"
-		resetHitboxes()
+		TweenService:Create(expanderToggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(220, 50, 50)}):Play()
+		expanderToggleButton.Text = APP_NAME .. ": OFF"
+		resetExpandedParts()
 	end
 end
 
-local function doToggleESP()
-	espEnabled = not espEnabled
-	if espEnabled then
-		TweenService:Create(espToggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(50, 200, 100)}):Play()
-		espToggleButton.Text = "ESP: ON"
+local function doToggleOverlay()
+	overlayEnabled = not overlayEnabled
+	if overlayEnabled then
+		TweenService:Create(overlayToggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(50, 200, 100)}):Play()
+		overlayToggleButton.Text = "Player overlay: ON"
 		for _, v in pairs(Players:GetPlayers()) do
-			if v ~= player then createESP(v) end
+			if v ~= player then createPlayerOverlay(v) end
 		end
 	else
-		TweenService:Create(espToggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(220, 50, 50)}):Play()
-		espToggleButton.Text = "ESP: OFF"
+		TweenService:Create(overlayToggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(220, 50, 50)}):Play()
+		overlayToggleButton.Text = "Player overlay: OFF"
 		local playersToRemove = {}
-		for targetPlayer in pairs(espData) do
+		for targetPlayer in pairs(overlayData) do
 			table.insert(playersToRemove, targetPlayer)
 		end
 		for _, targetPlayer in pairs(playersToRemove) do
-			removeESP(targetPlayer)
+			removePlayerOverlay(targetPlayer)
 		end
 	end
 end
@@ -1117,25 +1118,25 @@ local function setupCharacterAdded(targetPlayer)
 		characterConnections[targetPlayer] = nil
 	end
 	characterConnections[targetPlayer] = targetPlayer.CharacterAdded:Connect(function(char)
-		originalData[char] = nil
-		modifiedChars[char] = nil
+		originalPartData[char] = nil
+		expandedCharacters[char] = nil
 		task.wait(0.5)
 		if not char or not char.Parent then return end
-		if isEnabled then
-			saveOriginalData(char)
-			updateHitboxes()
+		if expanderEnabled then
+			saveOriginalPartData(char)
+			updateExpandedParts()
 		end
-		if espEnabled then
-			createESP(targetPlayer)
+		if overlayEnabled then
+			createPlayerOverlay(targetPlayer)
 		end
 	end)
 end
 
 local function applyLoadedSettings()
 	if not savedData then return end
-	if savedData.hitboxSize then
-		hitboxSize = math.max(1, savedData.hitboxSize)
-		textBox.Text = tostring(hitboxSize)
+	if savedData.expansionSize then
+		expansionSize = math.max(1, savedData.expansionSize)
+		expansionSizeInput.Text = tostring(expansionSize)
 	end
 	if savedData.disableTransparency ~= nil then
 		disableTransparency = savedData.disableTransparency
@@ -1176,34 +1177,34 @@ end
 Players.PlayerAdded:Connect(function(newPlayer)
 	setupCharacterAdded(newPlayer)
 	task.wait(1)
-	if isEnabled then updateHitboxes() end
-	if espEnabled then createESP(newPlayer) end
+	if expanderEnabled then updateExpandedParts() end
+	if overlayEnabled then createPlayerOverlay(newPlayer) end
 end)
 
 Players.PlayerRemoving:Connect(function(removedPlayer)
-	removeESP(removedPlayer)
+	removePlayerOverlay(removedPlayer)
 	if characterConnections[removedPlayer] then
 		characterConnections[removedPlayer]:Disconnect()
 		characterConnections[removedPlayer] = nil
 	end
 	if removedPlayer.Character then
-		originalData[removedPlayer.Character] = nil
-		modifiedChars[removedPlayer.Character] = nil
+		originalPartData[removedPlayer.Character] = nil
+		expandedCharacters[removedPlayer.Character] = nil
 	end
 end)
 
-applyButton.MouseButton1Click:Connect(function()
-	doApplyHitbox()
+applyExpansionButton.MouseButton1Click:Connect(function()
+	doApplyExpansion()
 end)
 
-toggleButton.MouseButton1Click:Connect(function()
-	animateButton(toggleButton)
-	doToggleHitbox()
+expanderToggleButton.MouseButton1Click:Connect(function()
+	animateButton(expanderToggleButton)
+	doToggleExpander()
 end)
 
-espToggleButton.MouseButton1Click:Connect(function()
-	animateButton(espToggleButton)
-	doToggleESP()
+overlayToggleButton.MouseButton1Click:Connect(function()
+	animateButton(overlayToggleButton)
+	doToggleOverlay()
 end)
 
 disableTransparencyButton.MouseButton1Click:Connect(function()
@@ -1216,7 +1217,7 @@ disableTransparencyButton.MouseButton1Click:Connect(function()
 		TweenService:Create(disableTransparencyButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(220, 50, 50)}):Play()
 		disableTransparencyButton.Text = "OFF"
 	end
-	if isEnabled then updateHitboxes() end
+	if expanderEnabled then updateExpandedParts() end
 	collectAndSave()
 end)
 
@@ -1242,22 +1243,22 @@ end)
 
 yesButton.MouseButton1Click:Connect(function()
 	animateButton(yesButton)
-	isEnabled = false
-	espEnabled = false
-	forceRestoreAllHitboxes()
+	expanderEnabled = false
+	overlayEnabled = false
+	forceRestoreAllExpandedParts()
 	local playersToRemove = {}
-	for targetPlayer in pairs(espData) do
+	for targetPlayer in pairs(overlayData) do
 		table.insert(playersToRemove, targetPlayer)
 	end
 	for _, targetPlayer in pairs(playersToRemove) do
-		removeESP(targetPlayer)
+		removePlayerOverlay(targetPlayer)
 	end
 	for _, conn in pairs(characterConnections) do
 		conn:Disconnect()
 	end
 	characterConnections = {}
-	originalData = {}
-	modifiedChars = {}
+	originalPartData = {}
+	expandedCharacters = {}
 	TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
 		Size = UDim2.new(0, 0, 0, 0),
 		Position = UDim2.new(
@@ -1332,18 +1333,18 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		setListening(nil)
 		return
 	end
-	if keybinds.hitbox and input.KeyCode == keybinds.hitbox then doToggleHitbox() end
-	if keybinds.esp and input.KeyCode == keybinds.esp then doToggleESP() end
+	if keybinds.expander and input.KeyCode == keybinds.expander then doToggleExpander() end
+	if keybinds.overlay and input.KeyCode == keybinds.overlay then doToggleOverlay() end
 	if keybinds.gui and input.KeyCode == keybinds.gui then doToggleGui() end
 	if keybinds.minimize and input.KeyCode == keybinds.minimize then doMinimize() end
-	if keybinds.apply and input.KeyCode == keybinds.apply then doApplyHitbox() end
+	if keybinds.applyExpansion and input.KeyCode == keybinds.applyExpansion then doApplyExpansion() end
 end)
 
 RunService.Heartbeat:Connect(function()
-	if isEnabled then
-		updateHitboxes()
+	if expanderEnabled then
+		updateExpandedParts()
 	end
-	updateESP()
+	updatePlayerOverlays()
 end)
 
 titleBar.InputBegan:Connect(function(input)
@@ -1380,11 +1381,11 @@ UserInputService.InputChanged:Connect(function(input)
 	end
 end)
 
-applyButton.MouseEnter:Connect(function()
-	TweenService:Create(applyButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(100, 170, 255)}):Play()
+applyExpansionButton.MouseEnter:Connect(function()
+	TweenService:Create(applyExpansionButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(100, 170, 255)}):Play()
 end)
-applyButton.MouseLeave:Connect(function()
-	TweenService:Create(applyButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(80, 150, 255)}):Play()
+applyExpansionButton.MouseLeave:Connect(function()
+	TweenService:Create(applyExpansionButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(80, 150, 255)}):Play()
 end)
 minimizeButton.MouseEnter:Connect(function()
 	TweenService:Create(minimizeButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(255, 220, 80)}):Play()
@@ -1442,18 +1443,18 @@ end)
 lightButton.MouseLeave:Connect(function()
 	TweenService:Create(lightButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(240, 240, 250)}):Play()
 end)
-espToggleButton.MouseEnter:Connect(function()
-	if espEnabled then
-		TweenService:Create(espToggleButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(70, 220, 120)}):Play()
+overlayToggleButton.MouseEnter:Connect(function()
+	if overlayEnabled then
+		TweenService:Create(overlayToggleButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(70, 220, 120)}):Play()
 	else
-		TweenService:Create(espToggleButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(255, 70, 70)}):Play()
+		TweenService:Create(overlayToggleButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(255, 70, 70)}):Play()
 	end
 end)
-espToggleButton.MouseLeave:Connect(function()
-	if espEnabled then
-		TweenService:Create(espToggleButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(50, 200, 100)}):Play()
+overlayToggleButton.MouseLeave:Connect(function()
+	if overlayEnabled then
+		TweenService:Create(overlayToggleButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(50, 200, 100)}):Play()
 	else
-		TweenService:Create(espToggleButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(220, 50, 50)}):Play()
+		TweenService:Create(overlayToggleButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(220, 50, 50)}):Play()
 	end
 end)
 disableTransparencyButton.MouseEnter:Connect(function()
