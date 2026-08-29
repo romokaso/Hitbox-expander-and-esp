@@ -142,7 +142,7 @@ contentFrame.BorderSizePixel = 0
 contentFrame.Parent = mainFrame
 
 local expansionSizeLabel = Instance.new("TextLabel")
-expansionSizeLabel.Size = UDim2.new(0, 88, 0, 22)
+expansionSizeLabel.Size = UDim2.new(0, 96, 0, 22)
 expansionSizeLabel.Position = UDim2.new(0, 12, 0, 8)
 expansionSizeLabel.BackgroundTransparency = 1
 expansionSizeLabel.Text = "Expansion size:"
@@ -154,7 +154,7 @@ expansionSizeLabel.Parent = contentFrame
 
 local expansionSizeInput = Instance.new("TextBox")
 expansionSizeInput.Size = UDim2.new(0, 60, 0, 28)
-expansionSizeInput.Position = UDim2.new(0, 104, 0, 6)
+expansionSizeInput.Position = UDim2.new(0, 110, 0, 6)
 expansionSizeInput.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
 expansionSizeInput.BorderSizePixel = 0
 expansionSizeInput.Text = "10"
@@ -938,7 +938,6 @@ local function forceRestoreAllExpandedParts()
 				for _, partName in pairs(expandablePartNames) do
 					local part = char:FindFirstChild(partName)
 					if part and part:IsA("BasePart") then
-						local humanoidDesc = v:FindFirstChildOfClass("HumanoidDescription")
 						part.CanCollide = false
 						if partName == "HumanoidRootPart" then
 							part.Transparency = 1
