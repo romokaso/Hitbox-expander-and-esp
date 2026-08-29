@@ -6,7 +6,7 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
-local SAVE_FILE = "hitbox_settings.json"
+local SAVE_FILE = "hitbox_expander_settings.json"
 
 local function saveSettings(data)
 	pcall(function()
@@ -30,7 +30,7 @@ end
 local savedData = loadSettings()
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "HitboxChanger"
+screenGui.Name = "HitboxExpander"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
@@ -77,7 +77,7 @@ local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, -100, 1, 0)
 titleLabel.Position = UDim2.new(0, 10, 0, 0)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "Hitbox changer & esp"
+titleLabel.Text = "Hitbox expander & player overlay"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 15
 titleLabel.Font = Enum.Font.GothamBold
@@ -202,20 +202,20 @@ local toggleCorner = Instance.new("UICorner")
 toggleCorner.CornerRadius = UDim.new(0, 7)
 toggleCorner.Parent = toggleButton
 
-local espToggleButton = Instance.new("TextButton")
-espToggleButton.Size = UDim2.new(0, 236, 0, 32)
-espToggleButton.Position = UDim2.new(0, 12, 0, 80)
-espToggleButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
-espToggleButton.BorderSizePixel = 0
-espToggleButton.Text = "ESP: OFF"
-espToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-espToggleButton.TextSize = 13
-espToggleButton.Font = Enum.Font.GothamBold
-espToggleButton.Parent = contentFrame
+local overlayToggleButton = Instance.new("TextButton")
+overlayToggleButton.Size = UDim2.new(0, 236, 0, 32)
+overlayToggleButton.Position = UDim2.new(0, 12, 0, 80)
+overlayToggleButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+overlayToggleButton.BorderSizePixel = 0
+overlayToggleButton.Text = "Player Overlay: OFF"
+overlayToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+overlayToggleButton.TextSize = 13
+overlayToggleButton.Font = Enum.Font.GothamBold
+overlayToggleButton.Parent = contentFrame
 
-local espToggleCorner = Instance.new("UICorner")
-espToggleCorner.CornerRadius = UDim.new(0, 7)
-espToggleCorner.Parent = espToggleButton
+local overlayToggleCorner = Instance.new("UICorner")
+overlayToggleCorner.CornerRadius = UDim.new(0, 7)
+overlayToggleCorner.Parent = overlayToggleButton
 
 local footerLabel = Instance.new("TextButton")
 footerLabel.Size = UDim2.new(1, 0, 0, 25)
@@ -498,7 +498,7 @@ local function makeKeybindRow(labelText, yPos)
 end
 
 local keybindHitboxLabel, keybindHitboxButton, keybindHitboxStroke = makeKeybindRow("Toggle Hitbox:", 142)
-local keybindEspLabel, keybindEspButton, keybindEspStroke = makeKeybindRow("Toggle ESP:", 178)
+local keybindOverlayLabel, keybindOverlayButton, keybindOverlayStroke = makeKeybindRow("Toggle Player Overlay:", 178)
 local keybindGuiLabel, keybindGuiButton, keybindGuiStroke = makeKeybindRow("Toggle GUI:", 214)
 local keybindMinimizeLabel, keybindMinimizeButton, keybindMinimizeStroke = makeKeybindRow("Minimize:", 250)
 local keybindApplyLabel, keybindApplyButton, keybindApplyStroke = makeKeybindRow("Apply Hitbox:", 286)
@@ -511,8 +511,8 @@ local isDragging = false
 local dragInput = nil
 local dragStart = nil
 local startPos = nil
-local espEnabled = false
-local espData = {}
+local overlayEnabled = false
+local overlayData = {}
 local lastAnimTime = 0
 local animCooldown = 0.15
 local disableTransparency = false
@@ -523,7 +523,7 @@ local modifiedChars = {}
 
 local keybinds = {
 	hitbox = nil,
-	esp = nil,
+	overlay = nil,
 	gui = nil,
 	minimize = nil,
 	apply = nil,
@@ -533,7 +533,7 @@ local listeningFor = nil
 
 local keybindButtons = {
 	hitbox = keybindHitboxButton,
-	esp = keybindEspButton,
+	overlay = keybindOverlayButton,
 	gui = keybindGuiButton,
 	minimize = keybindMinimizeButton,
 	apply = keybindApplyButton,
@@ -541,7 +541,7 @@ local keybindButtons = {
 
 local keybindStrokes = {
 	hitbox = keybindHitboxStroke,
-	esp = keybindEspStroke,
+	overlay = keybindOverlayStroke,
 	gui = keybindGuiStroke,
 	minimize = keybindMinimizeStroke,
 	apply = keybindApplyStroke,
@@ -549,7 +549,7 @@ local keybindStrokes = {
 
 local keybindLabels = {
 	hitbox = keybindHitboxLabel,
-	esp = keybindEspLabel,
+	overlay = keybindOverlayLabel,
 	gui = keybindGuiLabel,
 	minimize = keybindMinimizeLabel,
 	apply = keybindApplyLabel,
@@ -738,21 +738,21 @@ local function applyTheme(theme)
 	collectAndSave()
 end
 
-local function removeESP(targetPlayer)
-	if espData[targetPlayer] then
-		if espData[targetPlayer].gui and espData[targetPlayer].gui.Parent then
-			espData[targetPlayer].gui:Destroy()
+local function removePlayerOverlay(targetPlayer)
+	if overlayData[targetPlayer] then
+		if overlayData[targetPlayer].gui and overlayData[targetPlayer].gui.Parent then
+			overlayData[targetPlayer].gui:Destroy()
 		end
-		if espData[targetPlayer].highlight and espData[targetPlayer].highlight.Parent then
-			espData[targetPlayer].highlight:Destroy()
+		if overlayData[targetPlayer].highlight and overlayData[targetPlayer].highlight.Parent then
+			overlayData[targetPlayer].highlight:Destroy()
 		end
-		espData[targetPlayer] = nil
+		overlayData[targetPlayer] = nil
 	end
 end
 
-local function createESP(targetPlayer)
+local function createPlayerOverlay(targetPlayer)
 	if targetPlayer == player then return end
-	removeESP(targetPlayer)
+	removePlayerOverlay(targetPlayer)
 	local char = targetPlayer.Character
 	if not char then return end
 	local head = char:FindFirstChild("Head")
@@ -765,7 +765,7 @@ local function createESP(targetPlayer)
 	local hasDisplayName = string.lower(targetPlayer.DisplayName) ~= string.lower(targetPlayer.Name)
 	local guiHeight = hasDisplayName and 36 or 20
 	local billboardGui = Instance.new("BillboardGui")
-	billboardGui.Name = "ESP_" .. targetPlayer.Name
+	billboardGui.Name = "Overlay_" .. targetPlayer.Name
 	billboardGui.AlwaysOnTop = true
 	billboardGui.Size = UDim2.new(0, 300, 0, guiHeight)
 	billboardGui.StudsOffset = Vector3.new(0, 3.2, 0)
@@ -797,7 +797,7 @@ local function createESP(targetPlayer)
 		infoLabel.Text = ""
 		infoLabel.TextXAlignment = Enum.TextXAlignment.Center
 		infoLabel.Parent = billboardGui
-		espData[targetPlayer] = {gui = billboardGui, displayLabel = displayLabel, infoLabel = infoLabel, highlight = nil, hasDisplayName = true}
+		overlayData[targetPlayer] = {gui = billboardGui, displayLabel = displayLabel, infoLabel = infoLabel, highlight = nil, hasDisplayName = true}
 	else
 		local textLabel = Instance.new("TextLabel")
 		textLabel.Name = "InfoLabel"
@@ -811,39 +811,39 @@ local function createESP(targetPlayer)
 		textLabel.Text = ""
 		textLabel.TextXAlignment = Enum.TextXAlignment.Center
 		textLabel.Parent = billboardGui
-		espData[targetPlayer] = {gui = billboardGui, displayLabel = nil, infoLabel = textLabel, highlight = nil, hasDisplayName = false}
+		overlayData[targetPlayer] = {gui = billboardGui, displayLabel = nil, infoLabel = textLabel, highlight = nil, hasDisplayName = false}
 	end
 	local highlight = Instance.new("Highlight")
-	highlight.Name = "ESPHighlight_" .. targetPlayer.Name
+	highlight.Name = "OverlayHighlight_" .. targetPlayer.Name
 	highlight.Adornee = char
 	highlight.FillColor = teamColor
 	highlight.OutlineColor = teamColor
 	highlight.FillTransparency = 0.5
 	highlight.OutlineTransparency = 0
 	highlight.Parent = char
-	espData[targetPlayer].highlight = highlight
+	overlayData[targetPlayer].highlight = highlight
 end
 
-local function updateESP()
-	if not espEnabled then return end
+local function updatePlayerOverlay()
+	if not overlayEnabled then return end
 	for _, targetPlayer in pairs(Players:GetPlayers()) do
 		if targetPlayer ~= player then
 			local char = targetPlayer.Character
 			if char and (char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart")) then
 				local humanoid = char:FindFirstChildOfClass("Humanoid")
 				if humanoid and humanoid.Health <= 0 then
-					removeESP(targetPlayer)
+					removePlayerOverlay(targetPlayer)
 				else
 					local needsRecreate = false
-					if not espData[targetPlayer] then
+					if not overlayData[targetPlayer] then
 						needsRecreate = true
-					elseif not espData[targetPlayer].gui or not espData[targetPlayer].gui.Parent then
+					elseif not overlayData[targetPlayer].gui or not overlayData[targetPlayer].gui.Parent then
 						needsRecreate = true
-					elseif not espData[targetPlayer].highlight or not espData[targetPlayer].highlight.Parent then
+					elseif not overlayData[targetPlayer].highlight or not overlayData[targetPlayer].highlight.Parent then
 						needsRecreate = true
 					end
-					if needsRecreate then createESP(targetPlayer) end
-					local data = espData[targetPlayer]
+					if needsRecreate then createPlayerOverlay(targetPlayer) end
+					local data = overlayData[targetPlayer]
 					if data and data.infoLabel then
 						local teamColor = getTeamColor(targetPlayer)
 						local myHrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
@@ -870,18 +870,18 @@ local function updateESP()
 					end
 				end
 			else
-				removeESP(targetPlayer)
+				removePlayerOverlay(targetPlayer)
 			end
 		end
 	end
 	local toClean = {}
-	for targetPlayer in pairs(espData) do
+	for targetPlayer in pairs(overlayData) do
 		if not targetPlayer or not targetPlayer.Parent then
 			table.insert(toClean, targetPlayer)
 		end
 	end
 	for _, targetPlayer in pairs(toClean) do
-		removeESP(targetPlayer)
+		removePlayerOverlay(targetPlayer)
 	end
 end
 
@@ -1085,23 +1085,23 @@ local function doToggleHitbox()
 	end
 end
 
-local function doToggleESP()
-	espEnabled = not espEnabled
-	if espEnabled then
-		TweenService:Create(espToggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(50, 200, 100)}):Play()
-		espToggleButton.Text = "ESP: ON"
+local function doTogglePlayerOverlay()
+	overlayEnabled = not overlayEnabled
+	if overlayEnabled then
+		TweenService:Create(overlayToggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(50, 200, 100)}):Play()
+		overlayToggleButton.Text = "Player Overlay: ON"
 		for _, v in pairs(Players:GetPlayers()) do
-			if v ~= player then createESP(v) end
+			if v ~= player then createPlayerOverlay(v) end
 		end
 	else
-		TweenService:Create(espToggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(220, 50, 50)}):Play()
-		espToggleButton.Text = "ESP: OFF"
+		TweenService:Create(overlayToggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(220, 50, 50)}):Play()
+		overlayToggleButton.Text = "Player Overlay: OFF"
 		local playersToRemove = {}
-		for targetPlayer in pairs(espData) do
+		for targetPlayer in pairs(overlayData) do
 			table.insert(playersToRemove, targetPlayer)
 		end
 		for _, targetPlayer in pairs(playersToRemove) do
-			removeESP(targetPlayer)
+			removePlayerOverlay(targetPlayer)
 		end
 	end
 end
@@ -1125,8 +1125,8 @@ local function setupCharacterAdded(targetPlayer)
 			saveOriginalData(char)
 			updateHitboxes()
 		end
-		if espEnabled then
-			createESP(targetPlayer)
+		if overlayEnabled then
+			createPlayerOverlay(targetPlayer)
 		end
 	end)
 end
@@ -1177,11 +1177,11 @@ Players.PlayerAdded:Connect(function(newPlayer)
 	setupCharacterAdded(newPlayer)
 	task.wait(1)
 	if isEnabled then updateHitboxes() end
-	if espEnabled then createESP(newPlayer) end
+	if overlayEnabled then createPlayerOverlay(newPlayer) end
 end)
 
 Players.PlayerRemoving:Connect(function(removedPlayer)
-	removeESP(removedPlayer)
+	removePlayerOverlay(removedPlayer)
 	if characterConnections[removedPlayer] then
 		characterConnections[removedPlayer]:Disconnect()
 		characterConnections[removedPlayer] = nil
@@ -1201,9 +1201,9 @@ toggleButton.MouseButton1Click:Connect(function()
 	doToggleHitbox()
 end)
 
-espToggleButton.MouseButton1Click:Connect(function()
-	animateButton(espToggleButton)
-	doToggleESP()
+overlayToggleButton.MouseButton1Click:Connect(function()
+	animateButton(overlayToggleButton)
+	doTogglePlayerOverlay()
 end)
 
 disableTransparencyButton.MouseButton1Click:Connect(function()
@@ -1243,14 +1243,14 @@ end)
 yesButton.MouseButton1Click:Connect(function()
 	animateButton(yesButton)
 	isEnabled = false
-	espEnabled = false
+	overlayEnabled = false
 	forceRestoreAllHitboxes()
 	local playersToRemove = {}
-	for targetPlayer in pairs(espData) do
+	for targetPlayer in pairs(overlayData) do
 		table.insert(playersToRemove, targetPlayer)
 	end
 	for _, targetPlayer in pairs(playersToRemove) do
-		removeESP(targetPlayer)
+		removePlayerOverlay(targetPlayer)
 	end
 	for _, conn in pairs(characterConnections) do
 		conn:Disconnect()
@@ -1333,7 +1333,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		return
 	end
 	if keybinds.hitbox and input.KeyCode == keybinds.hitbox then doToggleHitbox() end
-	if keybinds.esp and input.KeyCode == keybinds.esp then doToggleESP() end
+	if keybinds.overlay and input.KeyCode == keybinds.overlay then doTogglePlayerOverlay() end
 	if keybinds.gui and input.KeyCode == keybinds.gui then doToggleGui() end
 	if keybinds.minimize and input.KeyCode == keybinds.minimize then doMinimize() end
 	if keybinds.apply and input.KeyCode == keybinds.apply then doApplyHitbox() end
@@ -1343,7 +1343,7 @@ RunService.Heartbeat:Connect(function()
 	if isEnabled then
 		updateHitboxes()
 	end
-	updateESP()
+	updatePlayerOverlay()
 end)
 
 titleBar.InputBegan:Connect(function(input)
@@ -1442,18 +1442,18 @@ end)
 lightButton.MouseLeave:Connect(function()
 	TweenService:Create(lightButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(240, 240, 250)}):Play()
 end)
-espToggleButton.MouseEnter:Connect(function()
-	if espEnabled then
-		TweenService:Create(espToggleButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(70, 220, 120)}):Play()
+overlayToggleButton.MouseEnter:Connect(function()
+	if overlayEnabled then
+		TweenService:Create(overlayToggleButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(70, 220, 120)}):Play()
 	else
-		TweenService:Create(espToggleButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(255, 70, 70)}):Play()
+		TweenService:Create(overlayToggleButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(255, 70, 70)}):Play()
 	end
 end)
-espToggleButton.MouseLeave:Connect(function()
-	if espEnabled then
-		TweenService:Create(espToggleButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(50, 200, 100)}):Play()
+overlayToggleButton.MouseLeave:Connect(function()
+	if overlayEnabled then
+		TweenService:Create(overlayToggleButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(50, 200, 100)}):Play()
 	else
-		TweenService:Create(espToggleButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(220, 50, 50)}):Play()
+		TweenService:Create(overlayToggleButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(220, 50, 50)}):Play()
 	end
 end)
 disableTransparencyButton.MouseEnter:Connect(function()
