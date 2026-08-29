@@ -2,7 +2,7 @@
 
 # 🎯 Hitbox Expander
 
-**Расширитель хитбоксов + ESP для Roblox с чистым анимированным GUI**
+**Hitbox expander + ESP for Roblox with a clean animated GUI**
 
 [![Roblox](https://img.shields.io/badge/Roblox-Script-00A2FF?logo=roblox&logoColor=white)](https://www.roblox.com)
 [![Lua](https://img.shields.io/badge/Lua-100%25-2C2D72?logo=lua&logoColor=white)](#)
@@ -14,200 +14,200 @@
 
 ---
 
-## 📖 Оглавление
+## 📖 Table of Contents
 
-- [✨ Возможности](#-возможности)
-- [📋 Требования](#-требования)
-- [🚀 Быстрый старт](#-быстрый-старт)
-- [🕹️ Использование](#️-использование)
-- [⌨️ Клавиши](#️-клавиши)
-- [⚙️ Настройки](#️-настройки)
-- [🧠 Как это работает](#-как-это-работает)
-- [💾 Автосохранение](#-автосохранение)
+- [✨ Features](#-features)
+- [📋 Requirements](#-requirements)
+- [🚀 Quick Start](#-quick-start)
+- [🕹️ Usage](#️-usage)
+- [⌨️ Keybinds](#️-keybinds)
+- [⚙️ Settings](#️-settings)
+- [🧠 How It Works](#-how-it-works)
+- [💾 Autosave](#-autosave)
 - [❓ FAQ](#-faq)
-- [📁 Структура репозитория](#-структура-репозитория)
-- [🛠️ Последние изменения](#️-последние-изменения)
-- [⚠️ Дисклеймер](#️-дисклеймер)
+- [📁 Repository Structure](#-repository-structure)
+- [🛠️ Recent Changes](#️-recent-changes)
+- [⚠️ Disclaimer](#️-disclaimer)
 
 ---
 
-## ✨ Возможности
+## ✨ Features
 
 ### 🎯 Hitbox Expander
-- Увеличивает хитбоксы **всех игроков, кроме вас** — по ним становится заметно легче попадать
-- Размер задаётся вручную (минимум `1`, по умолчанию `10`)
-- Работает с персонажами **R6 и R15** — скрипт сам находит все нужные части
-- Умное масштабирование разных частей тела:
+- Enlarges the hitboxes of **every player except you** — making them noticeably easier to hit
+- Size is set manually (minimum `1`, default `10`)
+- Works with both **R6 and R15** characters — the script finds all the right parts automatically
+- Smart scaling for different body parts:
 
-| Часть | Множитель | Особенности |
+| Part | Multiplier | Notes |
 |---|---|---|
-| `HumanoidRootPart` | ×1.0 | Полностью невидима, коллизии отключены |
-| `Head` | ×0.8 | Цвет команды, материал `ForceField` |
-| Остальные части (торс, руки, ноги и их сегменты) | ×0.7 | Цвет команды, материал `ForceField` |
+| `HumanoidRootPart` | ×1.0 | Fully invisible, collisions disabled |
+| `Head` | ×0.8 | Team color, `ForceField` material |
+| Other parts (torso, arms, legs and their segments) | ×0.7 | Team color, `ForceField` material |
 
-- **Безопасное выключение**: оригинальные свойства каждой части (`Size`, `Transparency`, `CanCollide`, `Color`, `Material`, `CastShadow`) сохраняются и полностью восстанавливаются при отключении или закрытии скрипта
-- Автоматически применяется к новым игрокам, респаунам и пропускает мёртвых
+- **Safe shutdown**: the original properties of every part (`Size`, `Transparency`, `CanCollide`, `Color`, `Material`, `CastShadow`) are saved and fully restored when the feature is disabled or the script is closed
+- Automatically applies to new players and respawns, and skips dead characters
 
 ### 👁️ ESP
-- Над головой каждого игрока: **имя** (и `DisplayName`, если отличается), **дистанция в стадах** и **HP** (`текущее/максимум`)
-- Текст и подсветка в **цвете команды** игрока
-- Подсветка персонажа (`Highlight`) с заливкой 50% и контуром
-- Обновляется **каждый кадр**, автоматически подхватывает новых игроков и убирает вышедших/мёртвых
+- Above each player's head: **name** (plus `DisplayName` if it differs), **distance in studs** and **HP** (`current/max`)
+- Text and highlight use the player's **team color**
+- Character `Highlight` with 50% fill and a full outline
+- Updates **every frame**, automatically picks up new players and removes those who leave or die
 
 ### 🖥️ GUI
-- Чистый интерфейс **260×180** с закруглениями и плавными анимациями (TweenService)
-- **Перетаскивание** окна за заголовок
-- **Сворачивание** в компактную панель
-- **Тёмная и светлая темы** с плавным переключением
-- Закрытие **с подтверждением** (чтобы не выключить случайно)
-- Визуальный отклик на неверный ввод (красная подсветка поля размера)
+- Clean **260×180** interface with rounded corners and smooth animations (TweenService)
+- **Draggable** by the title bar
+- **Minimizable** into a compact bar
+- **Dark and light themes** with smooth switching
+- Closing **with confirmation** (so you don't turn it off by accident)
+- Visual feedback for invalid input (the size field flashes red)
 
-### ⚙️ Настройки
-- **5 настраиваемых клавиш** (см. [Клавиши](#️-клавиши))
-- Опция «Disable Transparency» — управление прозрачностью частей хитбокса
-- Переключатель темы
-- **Автосохранение**: все настройки записываются в файл и подхватываются при следующем запуске
-
----
-
-## 📋 Требования
-
-- Учётная запись **Roblox**
-- Любой актуальный **executor** (исполнитель скриптов)
-- Для автосохранения настроек нужна поддержка `writefile`/`readfile` (есть в большинстве исполнителей); без неё скрипт продолжит работать, просто без сохранения
+### ⚙️ Settings
+- **5 customizable keybinds** (see [Keybinds](#️-keybinds))
+- "Disable Transparency" option — controls hitbox part transparency
+- Theme switcher
+- **Autosave**: all settings are written to a file and restored on the next launch
 
 ---
 
-## 🚀 Быстрый старт
+## 📋 Requirements
 
-1. Скачайте файл [`Hitbox expander`](./Hitbox%20expander) или скопируйте его содержимое
-2. Запустите Roblox и ваш executor
-3. Вставьте код в окно исполнителя и выполните его
-4. В центре экрана появится окно **Hitbox expander** — готово! 🎉
+- A **Roblox** account
+- Any up-to-date script **executor**
+- Autosave requires `writefile`/`readfile` support (available in most executors); without it the script still works, just without saving
 
-> 💡 Можно использовать и `loadstring`:
+---
+
+## 🚀 Quick Start
+
+1. Download the [`Hitbox expander`](./Hitbox%20expander) file or copy its contents
+2. Launch Roblox and your executor
+3. Paste the code into the executor and run it
+4. The **Hitbox expander** window appears in the center of the screen — you're done! 🎉
+
+> 💡 You can also use `loadstring`:
 > ```lua
-> loadstring(game:HttpGet("RAW_ССЫЛКА_НА_ФАЙЛ"))()
+> loadstring(game:HttpGet("RAW_LINK_TO_THE_FILE"))()
 > ```
-> подставив raw-ссылку на файл `Hitbox expander` в вашей ветке репозитория.
+> substituting the raw link to the `Hitbox expander` file in your branch of the repository.
 
 ---
 
-## 🕹️ Использование
+## 🕹️ Usage
 
-| Элемент | Что делает |
+| Element | What it does |
 |---|---|
-| Поле **«Expander Size»** + кнопка **Apply** | Задаёт размер хитбокса и применяет его (работает даже при выключенном тумблере — размер просто сохранится) |
-| Кнопка **Hitbox Expander: ON/OFF** | Включает/выключает расширение хитбоксов |
-| Кнопка **ESP: ON/OFF** | Включает/выключает ESP |
-| Кнопка **⚙** | Открывает панель настроек |
-| Кнопка **—** | Сворачивает окно в узкую панель |
-| Кнопка **X** | Закрывает скрипт (с подтверждением). При закрытии все хитбоксы восстанавливаются, ESP удаляется |
+| **"Expander Size"** field + **Apply** button | Sets the hitbox size and applies it (works even when the toggle is off — the size is simply saved) |
+| **Hitbox Expander: ON/OFF** button | Toggles the hitbox expansion |
+| **ESP: ON/OFF** button | Toggles the ESP |
+| **⚙** button | Opens the settings panel |
+| **—** button | Minimizes the window into a slim bar |
+| **X** button | Closes the script (with confirmation). On close, all hitboxes are restored and the ESP is removed |
 
-**Быстрый сценарий:** введите размер (например, `15`) → нажмите **Apply** → включите **Hitbox Expander** → при желании включите **ESP**.
+**Quick workflow:** enter a size (e.g. `15`) → press **Apply** → toggle **Hitbox Expander** on → optionally enable **ESP**.
 
 ---
 
-## ⌨️ Клавиши
+## ⌨️ Keybinds
 
-Настройка: **⚙ → Keybinds →** клик по кнопке действия → нажмите нужную клавишу. `Escape` отменяет назначение.
+Configuration: **⚙ → Keybinds →** click the action's button → press the desired key. `Escape` cancels the assignment.
 
-| Действие | Что делает |
+| Action | What it does |
 |---|---|
-| **Toggle Expander** | Включить/выключить расширение хитбоксов |
-| **Toggle ESP** | Включить/выключить ESP |
-| **Toggle GUI** | Показать/скрыть окно |
-| **Minimize** | Свернуть/развернуть окно |
-| **Apply Expander** | Применить размер из поля |
+| **Toggle Expander** | Toggle hitbox expansion on/off |
+| **Toggle ESP** | Toggle ESP on/off |
+| **Toggle GUI** | Show/hide the window |
+| **Minimize** | Minimize/restore the window |
+| **Apply Expander** | Apply the size from the field |
 
-По умолчанию клавиши не назначены (`None`) — настройте их под себя.
+By default, no keys are bound (`None`) — set them up as you like.
 
 ---
 
-## ⚙️ Настройки
+## ⚙️ Settings
 
-| Опция | Значения | По умолчанию | Описание |
+| Option | Values | Default | Description |
 |---|---|---|---|
-| **Theme** | Dark / Light | `Dark` | Тема интерфейса |
-| **Disable Transparency** | ON / OFF | `OFF` | `ON` — части хитбокса полностью невидимы; `OFF` — полупрозрачны (30% видимости) |
-| **Keybinds** | 5 действий | `None` | Горячие клавиши (см. [Клавиши](#️-клавиши)) |
-| **Expander Size** | ≥ 1 | `10` | Размер хитбокса |
+| **Theme** | Dark / Light | `Dark` | Interface theme |
+| **Disable Transparency** | ON / OFF | `OFF` | `ON` — hitbox parts are completely invisible; `OFF` — semi-transparent (30% visible) |
+| **Keybinds** | 5 actions | `None` | Hotkeys (see [Keybinds](#️-keybinds)) |
+| **Expander Size** | ≥ 1 | `10` | Hitbox size |
 
-Все настройки применяются мгновенно и **сохраняются автоматически**.
-
----
-
-## 🧠 Как это работает
-
-- **Каждый кадр** (`RunService.Heartbeat`) скрипт проходит по всем игрокам, находит их персонажей и масштабирует части тела, попутно сохраняя оригинальные свойства. При выключении/закрытии — всё возвращается в исходное состояние.
-- **ESP** создаёт `BillboardGui` над головой (всегда поверх, смещение 3.2 стада) и `Highlight` вокруг персонажа; дистанция и HP пересчитываются в реальном времени.
-- **Настройки** сериализуются в JSON и пишутся в файл `hitbox_expander_settings.json` в рабочей папке executor'а.
+All settings are applied instantly and **saved automatically**.
 
 ---
 
-## 💾 Автосохранение
+## 🧠 How It Works
 
-- Файл настроек: `hitbox_expander_settings.json` (в рабочей папке вашего executor'а)
-- Сохраняются: размер хитбокса, тема, «Disable Transparency» и все клавиши
-- Настройки восстанавливаются при каждом запуске скрипта
-- **Сброс настроек:** просто удалите файл `hitbox_expander_settings.json`
+- **Every frame** (`RunService.Heartbeat`) the script iterates over all players, finds their characters and scales the body parts, saving the original properties along the way. On disable/close — everything is restored to its original state.
+- **ESP** creates a `BillboardGui` above the head (always on top, 3.2 studs offset) and a `Highlight` around the character; distance and HP are recalculated in real time.
+- **Settings** are serialized to JSON and written to `hitbox_expander_settings.json` in the executor's workspace folder.
+
+---
+
+## 💾 Autosave
+
+- Settings file: `hitbox_expander_settings.json` (in your executor's workspace folder)
+- Saved values: hitbox size, theme, "Disable Transparency" and all keybinds
+- Settings are restored every time the script runs
+- **Resetting settings:** simply delete the `hitbox_expander_settings.json` file
 
 ---
 
 ## ❓ FAQ
 
-**Почему мой персонаж не увеличивается?**
-Скрипт расширяет хитбоксы *других* игроков — чтобы *вам* было легче по ним попадать. Свой персонаж не затрагивается.
+**Why doesn't my own character get bigger?**
+The script expands the hitboxes of *other* players — so that *you* can hit them more easily. Your own character is not affected.
 
-**Изменения видит только мой клиент?**
-Да, скрипт работает на стороне клиента. В большинстве игр попадания считаются по новым размерам, однако в играх с серверной проверкой попаданий или античитом эффект может отсутствовать.
+**Only my client sees the changes?**
+Yes, the script works client-side. In most games hits are registered with the new sizes, but in games with server-side hit validation or anti-cheat there may be no effect.
 
-**Скрипт не работает / GUI не появляется.**
-Убедитесь, что executor актуальный и поддерживает используемые API. Некоторые игры блокируют сторонние скрипты — попробуйте в другой игре.
+**The script doesn't work / the GUI doesn't appear.**
+Make sure your executor is up to date and supports the APIs used. Some games block third-party scripts — try it in a different game.
 
-**Почему клавиши по умолчанию «None»?**
-Они специально не назначены, чтобы не конфликтовать с управлением игры. Настройте их в **⚙ → Keybinds**.
+**Why are the keybinds "None" by default?**
+They are intentionally unbound so they don't conflict with game controls. Set them up in **⚙ → Keybinds**.
 
-**Что делать, если ввёл неверный размер?**
-Поле подсветится красным. Минимальный размер — `1`; меньшие значения автоматически округляются до `1`.
+**What if I enter an invalid size?**
+The field flashes red. The minimum size is `1`; smaller values are automatically rounded up to `1`.
 
-**Что-то сломалось в персонажах других игроков?**
-Нажмите **X** (закрыть) или выключите **Hitbox Expander** — все оригинальные свойства частей будут восстановлены автоматически.
+**Something broke in other players' characters?**
+Press **X** (close) or turn off **Hitbox Expander** — all original part properties will be restored automatically.
 
 ---
 
-## 📁 Структура репозитория
+## 📁 Repository Structure
 
 ```
 Hitbox-expander-esp/
-├── Hitbox expander   # основной скрипт (Lua / Roblox)
-└── README.md         # этот файл
+├── Hitbox expander   # main script (Lua / Roblox)
+└── README.md         # this file
 ```
 
 ---
 
-## 🛠️ Последние изменения
+## 🛠️ Recent Changes
 
-- 🔄 Полный ребрендинг: **Hitbox changer** → **Hitbox Expander** (файл, GUI, настройки, внутренний код)
-- 💾 Система сохранения/загрузки настроек в файл (автосохранение)
-- ⌨️ 5 настраиваемых клавиш + UI для их назначения
-- 👁️ Переключатель видимости GUI
-- 📜 Прокручиваемая панель настроек
-- 🧹 Улучшенное восстановление хитбоксов и отслеживание персонажей
-- 🎨 Визуальный отклик на неверный ввод
-- 🛡️ Сохранение дополнительных свойств частей (`CastShadow` и др.)
-- 🐞 Исправлена очистка при отключении функций
+- 🔄 Full rebranding: **Hitbox changer** → **Hitbox Expander** (file, GUI, settings, internal code)
+- 💾 Settings save/load system with file autosave
+- ⌨️ 5 customizable keybinds + UI for assigning them
+- 👁️ GUI visibility toggle
+- 📜 Scrollable settings panel
+- 🧹 Improved hitbox restoration and character tracking
+- 🎨 Visual feedback for invalid input
+- 🛡️ Preservation of additional part properties (`CastShadow` and more)
+- 🐞 Fixed cleanup when disabling features
 
 ---
 
-## ⚠️ Дисклеймер
+## ⚠️ Disclaimer
 
-Скрипт предоставляется **исключительно в образовательных целях**. Использование эксплойтов нарушает условия использования Roblox и может привести к блокировке аккаунта. Вы используете его **на свой страх и риск** — автор не несёт ответственности за возможные последствия. Проект не связан с Roblox Corporation.
+This script is provided **for educational purposes only**. Using exploits violates Roblox's Terms of Use and may lead to an account ban. Use it **at your own risk** — the author is not responsible for any possible consequences. This project is not affiliated with Roblox Corporation.
 
 ---
 
 <div align="center">
 
-Сделано с ❤️ — **by: romokaso**
+Made with ❤️ — **by: romokaso**
 
 </div>
