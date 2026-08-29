@@ -3,15 +3,22 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
-local GuiService = game:GetService("GuiService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 local APP_NAME = "Hitbox expander & player overlay"
 local GUI_NAME = "HitboxExpanderPlayerOverlay"
+local LEGACY_GUI_NAMES = {
+	"HitboxExpander",
+	"HitboxChanger",
+}
 local RUNTIME_KEY = "__HitboxExpanderPlayerOverlayRuntime"
 local SETTINGS_FILE = "hitbox_expander_player_overlay_settings.json"
+local LEGACY_SETTINGS_FILES = {
+	"hitbox_expander_settings.json",
+	"hitbox_settings.json",
+}
 local MIN_EXPANSION_SIZE = 1
 local MAX_EXPANSION_SIZE = 100
 local EXPANSION_UPDATE_INTERVAL = 1 / 30
@@ -36,11 +43,16 @@ pcall(function()
 	runtimeEnvironment[RUNTIME_KEY] = nil
 end)
 
-local existingGui = playerGui:FindFirstChild(GUI_NAME)
-if existingGui then
-	pcall(function()
-		existingGui:Destroy()
-	end)
+local guiNamesToReplace = {[GUI_NAME] = true}
+for _, legacyGuiName in ipairs(LEGACY_GUI_NAMES) do
+	guiNamesToReplace[legacyGuiName] = true
+end
+for _, existingGui in ipairs(playerGui:GetChildren()) do
+	if guiNamesToReplace[existingGui.Name] and existingGui:IsA("ScreenGui") then
+		pcall(function()
+			existingGui:Destroy()
+		end)
+	end
 end
 
 local function isFiniteNumber(value)
@@ -65,25 +77,54 @@ local function saveSettings(data)
 	return ok
 end
 
-local function loadSettings()
-	if type(readfile) ~= "function" then return nil end
-	local ok, result = pcall(function()
-		if type(isfile) == "function" and not isfile(SETTINGS_FILE) then
-			return nil
+local function readSettingsFile(fileName)
+	local confirmedExistingFile = false
+	if type(isfile) == "function" then
+		local checkedFile, fileExists = pcall(isfile, fileName)
+		if checkedFile then
+			if not fileExists then return nil, false end
+			confirmedExistingFile = true
 		end
-		return HttpService:JSONDecode(readfile(SETTINGS_FILE))
+	end
+
+	local ok, result = pcall(function()
+		return HttpService:JSONDecode(readfile(fileName))
 	end)
-	if ok and type(result) == "table" then return result end
-	return nil
+	if ok and type(result) == "table" then return result, false end
+	return nil, confirmedExistingFile
 end
 
-local savedData = loadSettings()
+local function loadSettings()
+	if type(readfile) ~= "function" then return nil, false end
+	local currentSettings, currentSettingsInvalid = readSettingsFile(SETTINGS_FILE)
+	if currentSettings then return currentSettings, false end
+
+	local invalidSettingsFound = currentSettingsInvalid
+	for _, legacyFileName in ipairs(LEGACY_SETTINGS_FILES) do
+		local legacySettings, legacySettingsInvalid = readSettingsFile(legacyFileName)
+		if legacySettings then return legacySettings, true end
+		invalidSettingsFound = invalidSettingsFound or legacySettingsInvalid
+	end
+	return nil, invalidSettingsFound
+end
+
+local savedData, settingsNeedMigration = loadSettings()
+if type(savedData) == "table" then
+	local savedKeybinds = savedData.keybinds
+	settingsNeedMigration = settingsNeedMigration
+		or savedData.hitboxSize ~= nil
+		or savedData["disableTransparency"] ~= nil
+		or (type(savedKeybinds) == "table" and (
+			savedKeybinds.hitbox ~= nil
+			or savedKeybinds.esp ~= nil
+			or savedKeybinds.apply ~= nil
+		))
+end
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = GUI_NAME
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-screenGui.Parent = playerGui
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
@@ -302,6 +343,7 @@ confirmFrame.Position = UDim2.new(0, 0, 0, 0)
 confirmFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 confirmFrame.BackgroundTransparency = 1
 confirmFrame.BorderSizePixel = 0
+confirmFrame.Active = true
 confirmFrame.Visible = false
 confirmFrame.ZIndex = 10
 confirmFrame.Parent = mainFrame
@@ -360,6 +402,7 @@ settingsFrame.Size = UDim2.new(1, 0, 1, 0)
 settingsFrame.Position = UDim2.new(1, 0, 0, 0)
 settingsFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 settingsFrame.BorderSizePixel = 0
+settingsFrame.Active = true
 settingsFrame.Visible = false
 settingsFrame.ZIndex = 10
 settingsFrame.Parent = mainFrame
@@ -581,6 +624,7 @@ local dragStart = nil
 local startPos = nil
 local dragEndConnection = nil
 local viewportSizeConnection = nil
+local viewportClampScheduled = false
 local overlayData = {}
 local characterConnections = {}
 local originalPartData = {}
@@ -630,6 +674,12 @@ local keybindActionNames = {
 	"gui",
 	"minimize",
 	"applyExpansion",
+}
+
+local legacyKeybindActionNames = {
+	expander = "hitbox",
+	overlay = "esp",
+	applyExpansion = "apply",
 }
 
 local expandablePartNames = {
@@ -693,8 +743,8 @@ local function applyKeybind(actionName, keyCode)
 	if keyCode == Enum.KeyCode.Unknown then return end
 
 	if keyCode then
-		for otherAction, assignedKey in pairs(keybinds) do
-			if otherAction ~= actionName and assignedKey == keyCode then
+		for _, otherAction in ipairs(keybindActionNames) do
+			if otherAction ~= actionName and keybinds[otherAction] == keyCode then
 				keybinds[otherAction] = nil
 				updateKeybindVisual(otherAction)
 			end
@@ -732,6 +782,10 @@ local function getTeamColor(targetPlayer)
 		return targetPlayer.TeamColor.Color
 	end
 	return Color3.fromRGB(255, 255, 255)
+end
+
+local function isCharacterInWorkspace(character)
+	return character ~= nil and character:IsDescendantOf(workspace)
 end
 
 local function animateButton(button)
@@ -826,16 +880,17 @@ end
 
 local function removeManagedOverlayInstances(targetPlayer, character)
 	if not targetPlayer or not character then return end
-	local managedNames = {
-		["PlayerOverlayBillboard_" .. targetPlayer.Name] = true,
-		["PlayerOverlayHighlight_" .. targetPlayer.Name] = true,
+	local managedClasses = {
+		["PlayerOverlayBillboard_" .. targetPlayer.Name] = "BillboardGui",
+		["PlayerOverlayHighlight_" .. targetPlayer.Name] = "Highlight",
 	}
 	local ok, descendants = pcall(function()
 		return character:GetDescendants()
 	end)
 	if not ok then return end
 	for _, descendant in ipairs(descendants) do
-		if managedNames[descendant.Name] then
+		local expectedClass = managedClasses[descendant.Name]
+		if expectedClass and descendant:IsA(expectedClass) then
 			destroyInstance(descendant)
 		end
 	end
@@ -871,7 +926,7 @@ local function createPlayerOverlay(targetPlayer)
 	removePlayerOverlay(targetPlayer)
 
 	local character = targetPlayer.Character
-	if not character or not character.Parent then return end
+	if not isCharacterInWorkspace(character) then return end
 	local head = character:FindFirstChild("Head")
 	local rootPart = character:FindFirstChild("HumanoidRootPart")
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
@@ -961,7 +1016,17 @@ end
 
 local function updatePlayerOverlays()
 	if isShuttingDown or not overlayEnabled then return end
-	local localRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	local localCharacter = player.Character
+	local localDistancePart = nil
+	if isCharacterInWorkspace(localCharacter) then
+		local localRootPart = localCharacter:FindFirstChild("HumanoidRootPart")
+		local localHead = localCharacter:FindFirstChild("Head")
+		if localRootPart and localRootPart:IsA("BasePart") then
+			localDistancePart = localRootPart
+		elseif localHead and localHead:IsA("BasePart") then
+			localDistancePart = localHead
+		end
+	end
 
 	for _, targetPlayer in ipairs(Players:GetPlayers()) do
 		if targetPlayer ~= player then
@@ -971,10 +1036,12 @@ local function updatePlayerOverlays()
 			local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 			local attachPart = head and head:IsA("BasePart") and head
 				or rootPart and rootPart:IsA("BasePart") and rootPart
+			local distancePart = rootPart and rootPart:IsA("BasePart") and rootPart or attachPart
 
-			if not character or not character.Parent or not attachPart or not humanoid or humanoid.Health <= 0 then
+			if not isCharacterInWorkspace(character) or not attachPart or not humanoid or humanoid.Health <= 0 then
+				local hadOverlay = overlayData[targetPlayer] ~= nil
 				removePlayerOverlay(targetPlayer)
-				if character then removeManagedOverlayInstances(targetPlayer, character) end
+				if hadOverlay and character then removeManagedOverlayInstances(targetPlayer, character) end
 			else
 				local data = overlayData[targetPlayer]
 				local currentDisplayName = tostring(targetPlayer.DisplayName or targetPlayer.Name)
@@ -997,8 +1064,8 @@ local function updatePlayerOverlays()
 				if data and data.infoLabel and data.infoLabel.Parent then
 					local teamColor = getTeamColor(targetPlayer)
 					local studsText = "?"
-					if localRootPart and rootPart and localRootPart:IsA("BasePart") and rootPart:IsA("BasePart") then
-						studsText = tostring(math.floor((localRootPart.Position - rootPart.Position).Magnitude))
+					if localDistancePart and distancePart then
+						studsText = tostring(math.floor((localDistancePart.Position - distancePart.Position).Magnitude))
 					end
 					local hpText = math.floor(math.max(0, humanoid.Health))
 						.. "/" .. math.floor(math.max(0, humanoid.MaxHealth)) .. " HP"
@@ -1031,32 +1098,33 @@ local function updatePlayerOverlays()
 	end
 end
 
-local function saveOriginalPartSnapshot(targetPlayer, character, part, partName)
-	if originalPartData[part] then return true end
+local function saveOriginalPartSnapshot(targetPlayer, character, part)
+	local existingSnapshot = originalPartData[part]
+	if existingSnapshot then return existingSnapshot end
+
 	local ok, snapshot = pcall(function()
-		local properties = {
-			Size = part.Size,
-			Transparency = part.Transparency,
-			CanCollide = part.CanCollide,
-		}
-		if partName ~= "HumanoidRootPart" then
-			properties.Color = part.Color
-			properties.Material = part.Material
-		end
 		return {
 			player = targetPlayer,
 			character = character,
-			properties = properties,
+			properties = {
+				Size = part.Size,
+				Transparency = part.Transparency,
+				CanCollide = part.CanCollide,
+				Color = part.Color,
+				Material = part.Material,
+			},
+			modifiedProperties = {},
 		}
 	end)
-	if not ok then return false end
+	if not ok then return nil end
 	originalPartData[part] = snapshot
-	return true
+	return snapshot
 end
 
 local function restoreOriginalPart(part, snapshot)
-	if part and part.Parent and snapshot and snapshot.properties then
-		for propertyName, value in pairs(snapshot.properties) do
+	if part and snapshot and snapshot.properties and snapshot.modifiedProperties then
+		for propertyName in pairs(snapshot.modifiedProperties) do
+			local value = snapshot.properties[propertyName]
 			pcall(function()
 				part[propertyName] = value
 			end)
@@ -1101,41 +1169,57 @@ local function forceRestoreAllExpandedParts()
 	end
 end
 
-local function applyExpansionToPart(targetPlayer, character, part, partName, teamColor)
-	if not saveOriginalPartSnapshot(targetPlayer, character, part, partName) then return end
-	pcall(function()
-		if partName == "HumanoidRootPart" then
-			part.Size = Vector3.new(expansionSize, expansionSize, expansionSize)
-			part.Transparency = 1
-			part.CanCollide = false
-		elseif partName == "Head" then
-			part.Size = Vector3.new(expansionSize * 0.8, expansionSize * 0.8, expansionSize * 0.8)
-			part.CanCollide = false
-			part.Color = teamColor
-			part.Material = Enum.Material.ForceField
-			part.Transparency = hideExpandedParts and 1 or 0.7
-		else
-			part.Size = Vector3.new(expansionSize * 0.7, expansionSize * 0.7, expansionSize * 0.7)
-			part.CanCollide = false
-			part.Color = teamColor
-			part.Material = Enum.Material.ForceField
-			part.Transparency = hideExpandedParts and 1 or 0.7
-		end
-	end)
+local function applyExpansionToPart(targetPlayer, character, part, partName, teamColor, targetSize)
+	local existingSnapshot = originalPartData[part]
+	if existingSnapshot and (existingSnapshot.player ~= targetPlayer or existingSnapshot.character ~= character) then
+		restoreOriginalPart(part, existingSnapshot)
+	end
+
+	local snapshot = saveOriginalPartSnapshot(targetPlayer, character, part)
+	if not snapshot then return end
+	local modifiedProperties = snapshot.modifiedProperties
+
+	modifiedProperties.Size = true
+	modifiedProperties.Transparency = true
+	modifiedProperties.CanCollide = true
+	if partName == "HumanoidRootPart" then
+		part.Size = targetSize
+		part.Transparency = 1
+		part.CanCollide = false
+	else
+		modifiedProperties.Color = true
+		modifiedProperties.Material = true
+		part.Size = targetSize
+		part.CanCollide = false
+		part.Color = teamColor
+		part.Material = Enum.Material.ForceField
+		part.Transparency = hideExpandedParts and 1 or 0.7
+	end
 end
 
 local function updateExpandedParts()
 	if isShuttingDown or not expanderEnabled then return end
+	local expandedPartsThisUpdate = {}
+	local rootExpansionSize = Vector3.new(expansionSize, expansionSize, expansionSize)
+	local headExpansionSize = Vector3.new(expansionSize * 0.8, expansionSize * 0.8, expansionSize * 0.8)
+	local bodyExpansionSize = Vector3.new(expansionSize * 0.7, expansionSize * 0.7, expansionSize * 0.7)
 	for _, targetPlayer in ipairs(Players:GetPlayers()) do
 		if targetPlayer ~= player then
 			local character = targetPlayer.Character
 			local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-			if character and character.Parent and humanoid and humanoid.Health > 0 then
+			if isCharacterInWorkspace(character) and humanoid and humanoid.Health > 0 then
 				local teamColor = getTeamColor(targetPlayer)
 				for _, partName in ipairs(expandablePartNames) do
 					local part = character:FindFirstChild(partName)
 					if part and part:IsA("BasePart") then
-						applyExpansionToPart(targetPlayer, character, part, partName, teamColor)
+						local targetSize = bodyExpansionSize
+						if partName == "HumanoidRootPart" then
+							targetSize = rootExpansionSize
+						elseif partName == "Head" then
+							targetSize = headExpansionSize
+						end
+						expandedPartsThisUpdate[part] = true
+						applyExpansionToPart(targetPlayer, character, part, partName, teamColor, targetSize)
 					end
 				end
 			elseif character then
@@ -1147,10 +1231,11 @@ local function updateExpandedParts()
 	local staleParts = {}
 	for part, snapshot in pairs(originalPartData) do
 		if not part.Parent then
-			table.insert(staleParts, {part, nil})
-		elseif not snapshot.player or snapshot.player.Parent ~= Players
+			table.insert(staleParts, {part, snapshot})
+		elseif not expandedPartsThisUpdate[part]
+			or not snapshot.player or snapshot.player.Parent ~= Players
 			or not snapshot.character or snapshot.player.Character ~= snapshot.character
-			or not snapshot.character.Parent or not part:IsDescendantOf(snapshot.character) then
+			or not part:IsDescendantOf(snapshot.character) then
 			table.insert(staleParts, {part, snapshot})
 		end
 	end
@@ -1196,18 +1281,18 @@ local function doApplyExpansion()
 end
 
 local function clampMainFrameToViewport()
-	if isShuttingDown or not mainFrame.Parent then return end
-	local camera = workspace.CurrentCamera
-	if not camera then return end
+	if isShuttingDown or not mainFrame.Parent or not screenGui.Parent then return end
 
+	local canvasPosition = screenGui.AbsolutePosition
+	local canvasSize = screenGui.AbsoluteSize
 	local absolutePosition = mainFrame.AbsolutePosition
 	local absoluteSize = mainFrame.AbsoluteSize
-	local viewportSize = camera.ViewportSize
-	local topLeftInset, bottomRightInset = GuiService:GetGuiInset()
-	local minimumX = topLeftInset.X
-	local minimumY = topLeftInset.Y
-	local maximumX = math.max(minimumX, viewportSize.X - bottomRightInset.X - absoluteSize.X)
-	local maximumY = math.max(minimumY, viewportSize.Y - bottomRightInset.Y - absoluteSize.Y)
+	if canvasSize.X <= 0 or canvasSize.Y <= 0 or absoluteSize.X <= 0 or absoluteSize.Y <= 0 then return end
+
+	local minimumX = canvasPosition.X
+	local minimumY = canvasPosition.Y
+	local maximumX = math.max(minimumX, canvasPosition.X + canvasSize.X - absoluteSize.X)
+	local maximumY = math.max(minimumY, canvasPosition.Y + canvasSize.Y - absoluteSize.Y)
 	local correctionX = math.clamp(absolutePosition.X, minimumX, maximumX) - absolutePosition.X
 	local correctionY = math.clamp(absolutePosition.Y, minimumY, maximumY) - absolutePosition.Y
 	if correctionX ~= 0 or correctionY ~= 0 then
@@ -1240,6 +1325,7 @@ end
 local function doToggleExpander()
 	if isShuttingDown then return end
 	expanderEnabled = not expanderEnabled
+	expansionUpdateAccumulator = 0
 	if expanderEnabled then
 		TweenService:Create(expanderToggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(50, 200, 100)}):Play()
 		expanderToggleButton.Text = "Hitbox expansion: ON"
@@ -1254,12 +1340,11 @@ end
 local function doToggleOverlay()
 	if isShuttingDown then return end
 	overlayEnabled = not overlayEnabled
+	overlayUpdateAccumulator = 0
 	if overlayEnabled then
 		TweenService:Create(overlayToggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(50, 200, 100)}):Play()
 		overlayToggleButton.Text = "Player overlay: ON"
-		for _, targetPlayer in ipairs(Players:GetPlayers()) do
-			if targetPlayer ~= player then createPlayerOverlay(targetPlayer) end
-		end
+		updatePlayerOverlays()
 	else
 		TweenService:Create(overlayToggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(220, 50, 50)}):Play()
 		overlayToggleButton.Text = "Player overlay: OFF"
@@ -1287,16 +1372,23 @@ local function trackServiceConnection(connection)
 	return connection
 end
 
+local function scheduleViewportClamp()
+	if isShuttingDown or viewportClampScheduled then return end
+	viewportClampScheduled = true
+	task.defer(function()
+		viewportClampScheduled = false
+		clampMainFrameToViewport()
+	end)
+end
+
 local function refreshViewportTracking()
 	disconnectConnection(viewportSizeConnection)
 	viewportSizeConnection = nil
 	local camera = workspace.CurrentCamera
 	if camera then
-		viewportSizeConnection = camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
-			task.defer(clampMainFrameToViewport)
-		end)
+		viewportSizeConnection = camera:GetPropertyChangedSignal("ViewportSize"):Connect(scheduleViewportClamp)
 	end
-	task.defer(clampMainFrameToViewport)
+	scheduleViewportClamp()
 end
 
 local function disconnectCharacterTracking(targetPlayer)
@@ -1313,7 +1405,7 @@ local function handleCharacterAdded(targetPlayer, character)
 	restorePlayerParts(targetPlayer)
 	removePlayerOverlay(targetPlayer)
 	if expanderEnabled then updateExpandedParts() end
-	if overlayEnabled then createPlayerOverlay(targetPlayer) end
+	if overlayEnabled then updatePlayerOverlays() end
 end
 
 local function handleCharacterRemoving(targetPlayer, character)
@@ -1345,6 +1437,7 @@ local function applyLoadedSettings()
 	end
 
 	local loadedSize = normalizeExpansionSize(savedData.expansionSize)
+	if not loadedSize then loadedSize = normalizeExpansionSize(savedData.hitboxSize) end
 	if loadedSize then
 		expansionSize = loadedSize
 		expansionSizeInput.Text = tostring(expansionSize)
@@ -1369,6 +1462,10 @@ local function applyLoadedSettings()
 		local usedKeys = {}
 		for _, actionName in ipairs(keybindActionNames) do
 			local keyName = savedData.keybinds[actionName]
+			local legacyActionName = legacyKeybindActionNames[actionName]
+			if type(keyName) ~= "string" and legacyActionName then
+				keyName = savedData.keybinds[legacyActionName]
+			end
 			if type(keyName) == "string" and keyName ~= "None" then
 				local ok, keyCode = pcall(function()
 					return Enum.KeyCode[keyName]
@@ -1386,6 +1483,22 @@ local function applyLoadedSettings()
 	applyTheme(loadedTheme, false)
 end
 
+local function loadedSettingsNeedRewrite()
+	if type(savedData) ~= "table" then return false end
+	if savedData.expansionSize ~= expansionSize
+		or savedData.theme ~= currentTheme
+		or savedData.hideExpandedParts ~= hideExpandedParts
+		or type(savedData.keybinds) ~= "table" then
+		return true
+	end
+	for _, actionName in ipairs(keybindActionNames) do
+		local keyCode = keybinds[actionName]
+		local expectedKeyName = keyCode and keyCode.Name or "None"
+		if savedData.keybinds[actionName] ~= expectedKeyName then return true end
+	end
+	return false
+end
+
 local registeredShutdown = nil
 local function shutdownRuntime(animateClose, guiAlreadyDestroying)
 	if isShuttingDown then return end
@@ -1393,6 +1506,9 @@ local function shutdownRuntime(animateClose, guiAlreadyDestroying)
 	expanderEnabled = false
 	overlayEnabled = false
 	isDragging = false
+	dragInput = nil
+	dragStart = nil
+	startPos = nil
 	listeningFor = nil
 	disconnectConnection(dragEndConnection)
 	dragEndConnection = nil
@@ -1450,6 +1566,7 @@ trackServiceConnection(screenGui.Destroying:Connect(function()
 		shutdownRuntime(false, true)
 	end
 end))
+screenGui.Parent = playerGui
 
 for _, targetPlayer in ipairs(Players:GetPlayers()) do
 	if targetPlayer ~= player then
@@ -1476,11 +1593,10 @@ trackServiceConnection(Players.PlayerRemoving:Connect(function(removedPlayer)
 	disconnectCharacterTracking(removedPlayer)
 end))
 
+trackServiceConnection(screenGui:GetPropertyChangedSignal("AbsolutePosition"):Connect(scheduleViewportClamp))
+trackServiceConnection(screenGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(scheduleViewportClamp))
 trackServiceConnection(workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
 	if not isShuttingDown then refreshViewportTracking() end
-end))
-trackServiceConnection(GuiService:GetPropertyChangedSignal("TopbarInset"):Connect(function()
-	if not isShuttingDown then task.defer(clampMainFrameToViewport) end
 end))
 refreshViewportTracking()
 
@@ -1668,6 +1784,9 @@ local function beginWindowDrag(input)
 		dragEndConnection = input.Changed:Connect(function()
 			if input.UserInputState == Enum.UserInputState.End then
 				isDragging = false
+				dragInput = nil
+				dragStart = nil
+				startPos = nil
 				disconnectConnection(dragEndConnection)
 				dragEndConnection = nil
 			end
@@ -1808,3 +1927,4 @@ hideExpandedPartsButton.MouseLeave:Connect(function()
 end)
 
 applyLoadedSettings()
+if settingsNeedMigration or loadedSettingsNeedRewrite() then collectAndSave() end
