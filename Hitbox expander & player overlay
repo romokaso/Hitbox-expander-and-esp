@@ -74,7 +74,7 @@ titleFix.BorderSizePixel = 0
 titleFix.Parent = titleBar
 
 local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(1, -100, 1, 0)
+titleLabel.Size = UDim2.new(1, -170, 1, 0)
 titleLabel.Position = UDim2.new(0, 10, 0, 0)
 titleLabel.BackgroundTransparency = 1
 titleLabel.Text = "Hitbox expander & player overlay"
@@ -99,6 +99,22 @@ settingsButtonTop.Parent = titleBar
 local settingsTopCorner = Instance.new("UICorner")
 settingsTopCorner.CornerRadius = UDim.new(0, 6)
 settingsTopCorner.Parent = settingsButtonTop
+
+local targetButtonTop = Instance.new("TextButton")
+targetButtonTop.Name = "TargetButtonTop"
+targetButtonTop.Size = UDim2.new(0, 26, 0, 26)
+targetButtonTop.Position = UDim2.new(1, -122, 0, 4)
+targetButtonTop.BackgroundColor3 = Color3.fromRGB(100, 100, 120)
+targetButtonTop.BorderSizePixel = 0
+targetButtonTop.Text = "👥"
+targetButtonTop.TextColor3 = Color3.fromRGB(255, 255, 255)
+targetButtonTop.TextSize = 13
+targetButtonTop.Font = Enum.Font.GothamBold
+targetButtonTop.Parent = titleBar
+
+local targetTopCorner = Instance.new("UICorner")
+targetTopCorner.CornerRadius = UDim.new(0, 6)
+targetTopCorner.Parent = targetButtonTop
 
 local minimizeButton = Instance.new("TextButton")
 minimizeButton.Name = "MinimizeButton"
@@ -366,7 +382,7 @@ settingsContentFrame.BorderSizePixel = 0
 settingsContentFrame.ZIndex = 11
 settingsContentFrame.ScrollBarThickness = 3
 settingsContentFrame.ScrollBarImageColor3 = Color3.fromRGB(80, 150, 255)
-settingsContentFrame.CanvasSize = UDim2.new(0, 0, 0, 350)
+settingsContentFrame.CanvasSize = UDim2.new(0, 0, 0, 1400)
 settingsContentFrame.Parent = settingsFrame
 
 local themeLabel = Instance.new("TextLabel")
@@ -497,11 +513,176 @@ local function makeKeybindRow(labelText, yPos)
 	return rowLabel, rowButton, rowStroke
 end
 
+local function makePartRow(partName, size, yPos)
+	local rowLabel = Instance.new("TextLabel")
+	rowLabel.Size = UDim2.new(0, 116, 0, 28)
+	rowLabel.Position = UDim2.new(0, 12, 0, yPos)
+	rowLabel.BackgroundTransparency = 1
+	rowLabel.Text = partName
+	rowLabel.TextColor3 = Color3.fromRGB(180, 180, 190)
+	rowLabel.TextSize = 11
+	rowLabel.Font = Enum.Font.Gotham
+	rowLabel.TextXAlignment = Enum.TextXAlignment.Left
+	rowLabel.ZIndex = 11
+	rowLabel.Parent = settingsContentFrame
+
+	local rowToggle = Instance.new("TextButton")
+	rowToggle.Size = UDim2.new(0, 50, 0, 26)
+	rowToggle.Position = UDim2.new(0, 134, 0, yPos + 1)
+	rowToggle.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
+	rowToggle.BorderSizePixel = 0
+	rowToggle.Text = "ON"
+	rowToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+	rowToggle.TextSize = 11
+	rowToggle.Font = Enum.Font.GothamBold
+	rowToggle.ZIndex = 11
+	rowToggle.Parent = settingsContentFrame
+
+	local rowToggleCorner = Instance.new("UICorner")
+	rowToggleCorner.CornerRadius = UDim.new(0, 6)
+	rowToggleCorner.Parent = rowToggle
+
+	local rowBox = Instance.new("TextBox")
+	rowBox.Size = UDim2.new(0, 54, 0, 26)
+	rowBox.Position = UDim2.new(0, 188, 0, yPos + 1)
+	rowBox.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+	rowBox.BorderSizePixel = 0
+	rowBox.Text = string.format("%g", size)
+	rowBox.PlaceholderText = "Size"
+	rowBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	rowBox.TextSize = 11
+	rowBox.Font = Enum.Font.Gotham
+	rowBox.ZIndex = 11
+	rowBox.Parent = settingsContentFrame
+
+	local rowBoxCorner = Instance.new("UICorner")
+	rowBoxCorner.CornerRadius = UDim.new(0, 6)
+	rowBoxCorner.Parent = rowBox
+
+	return rowLabel, rowToggle, rowBox
+end
+
+local function makeToggleRow(labelText, initialOn, yPos)
+	local rowLabel = Instance.new("TextLabel")
+	rowLabel.Size = UDim2.new(0, 140, 0, 28)
+	rowLabel.Position = UDim2.new(0, 12, 0, yPos)
+	rowLabel.BackgroundTransparency = 1
+	rowLabel.Text = labelText
+	rowLabel.TextColor3 = Color3.fromRGB(180, 180, 190)
+	rowLabel.TextSize = 12
+	rowLabel.Font = Enum.Font.Gotham
+	rowLabel.TextXAlignment = Enum.TextXAlignment.Left
+	rowLabel.ZIndex = 11
+	rowLabel.Parent = settingsContentFrame
+
+	local rowButton = Instance.new("TextButton")
+	rowButton.Size = UDim2.new(0, 60, 0, 26)
+	rowButton.Position = UDim2.new(0, 176, 0, yPos + 1)
+	rowButton.BackgroundColor3 = initialOn and Color3.fromRGB(50, 200, 100) or Color3.fromRGB(220, 50, 50)
+	rowButton.BorderSizePixel = 0
+	rowButton.Text = initialOn and "ON" or "OFF"
+	rowButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	rowButton.TextSize = 11
+	rowButton.Font = Enum.Font.GothamBold
+	rowButton.ZIndex = 11
+	rowButton.Parent = settingsContentFrame
+
+	local rowButtonCorner = Instance.new("UICorner")
+	rowButtonCorner.CornerRadius = UDim.new(0, 6)
+	rowButtonCorner.Parent = rowButton
+
+	return rowLabel, rowButton
+end
+
 local keybindExpanderLabel, keybindExpanderButton, keybindExpanderStroke = makeKeybindRow("Toggle Expander:", 142)
 local keybindPlayerOverlayLabel, keybindPlayerOverlayButton, keybindPlayerOverlayStroke = makeKeybindRow("Toggle Player Overlay:", 178)
 local keybindGuiLabel, keybindGuiButton, keybindGuiStroke = makeKeybindRow("Toggle GUI:", 214)
 local keybindMinimizeLabel, keybindMinimizeButton, keybindMinimizeStroke = makeKeybindRow("Minimize:", 250)
 local keybindApplyLabel, keybindApplyButton, keybindApplyStroke = makeKeybindRow("Apply Expander:", 286)
+
+local expanderPartsSectionLabel = Instance.new("TextLabel")
+expanderPartsSectionLabel.Size = UDim2.new(1, -24, 0, 22)
+expanderPartsSectionLabel.Position = UDim2.new(0, 12, 0, 322)
+expanderPartsSectionLabel.BackgroundTransparency = 1
+expanderPartsSectionLabel.Text = "Expander Parts (multiplier):"
+expanderPartsSectionLabel.TextColor3 = Color3.fromRGB(80, 150, 255)
+expanderPartsSectionLabel.TextSize = 13
+expanderPartsSectionLabel.Font = Enum.Font.GothamBold
+expanderPartsSectionLabel.TextXAlignment = Enum.TextXAlignment.Left
+expanderPartsSectionLabel.ZIndex = 11
+expanderPartsSectionLabel.Parent = settingsContentFrame
+
+local expanderParts = {
+	{ Name = "HumanoidRootPart", DefaultSize = 1 },
+	{ Name = "Head", DefaultSize = 0.8 },
+	{ Name = "Torso", DefaultSize = 0.7 },
+	{ Name = "Left Arm", DefaultSize = 0.7 },
+	{ Name = "Right Arm", DefaultSize = 0.7 },
+	{ Name = "Left Leg", DefaultSize = 0.7 },
+	{ Name = "Right Leg", DefaultSize = 0.7 },
+	{ Name = "UpperTorso", DefaultSize = 0.7 },
+	{ Name = "LowerTorso", DefaultSize = 0.7 },
+	{ Name = "LeftUpperArm", DefaultSize = 0.7 },
+	{ Name = "LeftLowerArm", DefaultSize = 0.7 },
+	{ Name = "LeftHand", DefaultSize = 0.7 },
+	{ Name = "RightUpperArm", DefaultSize = 0.7 },
+	{ Name = "RightLowerArm", DefaultSize = 0.7 },
+	{ Name = "RightHand", DefaultSize = 0.7 },
+	{ Name = "LeftUpperLeg", DefaultSize = 0.7 },
+	{ Name = "LeftLowerLeg", DefaultSize = 0.7 },
+	{ Name = "LeftFoot", DefaultSize = 0.7 },
+	{ Name = "RightUpperLeg", DefaultSize = 0.7 },
+	{ Name = "RightLowerLeg", DefaultSize = 0.7 },
+}
+
+local partRows = {}
+for i, partInfo in ipairs(expanderParts) do
+	local yPos = 354 + (i - 1) * 34
+	local label, toggleBtn, sizeBox = makePartRow(partInfo.Name, partInfo.DefaultSize, yPos)
+	partRows[partInfo.Name] = {
+		toggle = toggleBtn,
+		box = sizeBox,
+		partName = partInfo.Name,
+	}
+end
+
+local expanderPartsSettings = {}
+for _, partInfo in ipairs(expanderParts) do
+	expanderPartsSettings[partInfo.Name] = { enabled = true, size = partInfo.DefaultSize }
+end
+
+local overlaySectionLabel = Instance.new("TextLabel")
+overlaySectionLabel.Size = UDim2.new(1, -24, 0, 22)
+overlaySectionLabel.Position = UDim2.new(0, 12, 0, 1038)
+overlaySectionLabel.BackgroundTransparency = 1
+overlaySectionLabel.Text = "Player Overlay Settings:"
+overlaySectionLabel.TextColor3 = Color3.fromRGB(80, 150, 255)
+overlaySectionLabel.TextSize = 13
+overlaySectionLabel.Font = Enum.Font.GothamBold
+overlaySectionLabel.TextXAlignment = Enum.TextXAlignment.Left
+overlaySectionLabel.ZIndex = 11
+overlaySectionLabel.Parent = settingsContentFrame
+
+local overlayToggles = {}
+local overlayToggleDefs = {
+	{ Key = "showName", Label = "Show Names:", Default = true },
+	{ Key = "showDistance", Label = "Show Distance:", Default = true },
+	{ Key = "showHealth", Label = "Show Health:", Default = true },
+	{ Key = "showDisplayName", Label = "Show Display Names:", Default = true },
+	{ Key = "showHighlight", Label = "Show Highlight:", Default = true },
+	{ Key = "teamColor", Label = "Team Color:", Default = true },
+	{ Key = "showChams", Label = "Show Chams:", Default = true },
+}
+for i, def in ipairs(overlayToggleDefs) do
+	local yPos = 1066 + (i - 1) * 36
+	local lbl, btn = makeToggleRow(def.Label, def.Default, yPos)
+	overlayToggles[def.Key] = { label = lbl, button = btn }
+end
+
+local overlaySettings = {}
+for _, def in ipairs(overlayToggleDefs) do
+	overlaySettings[def.Key] = def.Default
+end
 
 local expanderSize = 10
 local isEnabled = false
@@ -520,6 +701,17 @@ local characterConnections = {}
 local originalData = {}
 local guiVisible = true
 local modifiedChars = {}
+local targetMode = "players"
+local selectedPlayers = {}
+local targetPanel = nil
+local targetPanelOpen = false
+local targetPanelItems = {}
+
+local updateExpanders
+local removePlayerOverlay
+local createPlayerOverlay
+local isTargetAllowed
+local refreshPlayerOverlay
 
 local keybinds = {
 	expander = nil,
@@ -575,10 +767,23 @@ local function collectAndSave()
 		expanderSize = expanderSize,
 		theme = currentTheme,
 		disableTransparency = disableTransparency,
-		keybinds = {}
+		keybinds = {},
+		expanderParts = {},
+		overlaySettings = overlaySettings,
+		targetMode = targetMode,
+		selectedPlayers = {},
 	}
 	for action, kc in pairs(keybinds) do
 		data.keybinds[action] = kc ~= nil and kc.Name or "None"
+	end
+	for partName, partCfg in pairs(expanderPartsSettings) do
+		data.expanderParts[partName] = {
+			enabled = partCfg.enabled,
+			size = partCfg.size,
+		}
+	end
+	for _, targetPlayer in pairs(selectedPlayers) do
+		table.insert(data.selectedPlayers, targetPlayer.Name)
 	end
 	saveSettings(data)
 end
@@ -635,6 +840,45 @@ for actionName, btn in pairs(keybindButtons) do
 		if listeningFor ~= capturedAction then
 			TweenService:Create(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(40, 40, 55)}):Play()
 		end
+	end)
+end
+
+for partName, row in pairs(partRows) do
+	row.toggle.MouseButton1Click:Connect(function()
+		local partCfg = expanderPartsSettings[partName]
+		partCfg.enabled = not partCfg.enabled
+		row.toggle.Text = partCfg.enabled and "ON" or "OFF"
+		row.toggle.BackgroundColor3 = partCfg.enabled and Color3.fromRGB(50, 200, 100) or Color3.fromRGB(220, 50, 50)
+		if isEnabled then updateExpanders() end
+		collectAndSave()
+	end)
+	row.box.FocusLost:Connect(function(enterPressed)
+		if enterPressed then
+			local num = tonumber(row.box.Text)
+			if num then
+				expanderPartsSettings[partName].size = math.max(0.1, num)
+			end
+			row.box.Text = string.format("%g", expanderPartsSettings[partName].size)
+			if isEnabled then updateExpanders() end
+			collectAndSave()
+		end
+	end)
+end
+
+for key, row in pairs(overlayToggles) do
+	row.button.MouseButton1Click:Connect(function()
+		overlaySettings[key] = not overlaySettings[key]
+		row.button.Text = overlaySettings[key] and "ON" or "OFF"
+		row.button.BackgroundColor3 = overlaySettings[key] and Color3.fromRGB(50, 200, 100) or Color3.fromRGB(220, 50, 50)
+		if playerOverlayEnabled then
+			for _, targetPlayer in pairs(Players:GetPlayers()) do
+				if targetPlayer ~= player and isTargetAllowed(targetPlayer) then
+					removePlayerOverlay(targetPlayer)
+					createPlayerOverlay(targetPlayer)
+				end
+			end
+		end
+		collectAndSave()
 	end)
 end
 
@@ -738,7 +982,7 @@ local function applyTheme(theme)
 	collectAndSave()
 end
 
-local function removePlayerOverlay(targetPlayer)
+removePlayerOverlay = function(targetPlayer)
 	if playerOverlayData[targetPlayer] then
 		if playerOverlayData[targetPlayer].gui and playerOverlayData[targetPlayer].gui.Parent then
 			playerOverlayData[targetPlayer].gui:Destroy()
@@ -746,11 +990,52 @@ local function removePlayerOverlay(targetPlayer)
 		if playerOverlayData[targetPlayer].highlight and playerOverlayData[targetPlayer].highlight.Parent then
 			playerOverlayData[targetPlayer].highlight:Destroy()
 		end
+		if playerOverlayData[targetPlayer].chams and playerOverlayData[targetPlayer].chams.Parent then
+			playerOverlayData[targetPlayer].chams:Destroy()
+		end
 		playerOverlayData[targetPlayer] = nil
 	end
 end
 
-local function createPlayerOverlay(targetPlayer)
+isTargetAllowed = function(targetPlayer)
+	if targetMode == "all" then return true end
+	if targetMode == "players" then return true end
+	if targetMode == "npc" then return false end
+	if targetMode == "team" then
+		if not player.Team then return true end
+		return targetPlayer.Team == player.Team
+	end
+	if targetMode == "custom" then
+		for _, selected in pairs(selectedPlayers) do
+			if selected == targetPlayer then return true end
+		end
+		return false
+	end
+	return true
+end
+
+local function getChamsColor(targetPlayer)
+	if overlaySettings.teamColor then
+		return getTeamColor(targetPlayer)
+	end
+	return Color3.fromRGB(255, 255, 255)
+end
+
+local function createChams(targetPlayer)
+	if not targetPlayer.Character then return end
+	local highlight = Instance.new("Highlight")
+	highlight.Name = "Chams_" .. targetPlayer.Name
+	highlight.Adornee = targetPlayer.Character
+	highlight.FillColor = getChamsColor(targetPlayer)
+	highlight.OutlineColor = getChamsColor(targetPlayer)
+	highlight.FillTransparency = 0.3
+	highlight.OutlineTransparency = 0
+	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	highlight.Parent = targetPlayer.Character
+	return highlight
+end
+
+createPlayerOverlay = function(targetPlayer)
 	if targetPlayer == player then return end
 	removePlayerOverlay(targetPlayer)
 	local char = targetPlayer.Character
@@ -763,15 +1048,20 @@ local function createPlayerOverlay(targetPlayer)
 	local attachPart = head or hrpPart
 	local teamColor = getTeamColor(targetPlayer)
 	local hasDisplayName = string.lower(targetPlayer.DisplayName) ~= string.lower(targetPlayer.Name)
-	local guiHeight = hasDisplayName and 36 or 20
+	local showDisplayNameRow = overlaySettings.showDisplayName and hasDisplayName
+	local guiHeight = showDisplayNameRow and 36 or 20
 	local billboardGui = Instance.new("BillboardGui")
 	billboardGui.Name = "PlayerOverlay_" .. targetPlayer.Name
 	billboardGui.AlwaysOnTop = true
 	billboardGui.Size = UDim2.new(0, 300, 0, guiHeight)
 	billboardGui.StudsOffset = Vector3.new(0, 3.2, 0)
-	billboardGui.Parent = attachPart
-	if hasDisplayName then
-		local displayLabel = Instance.new("TextLabel")
+	if overlaySettings.showName then
+		billboardGui.Parent = attachPart
+	end
+	local displayLabel = nil
+	local infoLabel = nil
+	if showDisplayNameRow and overlaySettings.showName then
+		displayLabel = Instance.new("TextLabel")
 		displayLabel.Name = "DisplayLabel"
 		displayLabel.Size = UDim2.new(1, 0, 0, 16)
 		displayLabel.Position = UDim2.new(0, 0, 0, 0)
@@ -784,93 +1074,111 @@ local function createPlayerOverlay(targetPlayer)
 		displayLabel.Text = targetPlayer.DisplayName
 		displayLabel.TextXAlignment = Enum.TextXAlignment.Center
 		displayLabel.Parent = billboardGui
-		local infoLabel = Instance.new("TextLabel")
+	end
+	if overlaySettings.showName then
+		infoLabel = Instance.new("TextLabel")
 		infoLabel.Name = "InfoLabel"
 		infoLabel.Size = UDim2.new(1, 0, 0, 16)
-		infoLabel.Position = UDim2.new(0, 0, 0, 18)
+		infoLabel.Position = UDim2.new(0, 0, 0, showDisplayNameRow and 18 or 0)
 		infoLabel.BackgroundTransparency = 1
-		infoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+		infoLabel.TextColor3 = teamColor
 		infoLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 		infoLabel.TextStrokeTransparency = 0.3
-		infoLabel.TextSize = 11
-		infoLabel.Font = Enum.Font.Gotham
+		infoLabel.TextSize = showDisplayNameRow and 11 or 13
+		infoLabel.Font = showDisplayNameRow and Enum.Font.Gotham or Enum.Font.GothamBold
 		infoLabel.Text = ""
 		infoLabel.TextXAlignment = Enum.TextXAlignment.Center
 		infoLabel.Parent = billboardGui
-		playerOverlayData[targetPlayer] = {gui = billboardGui, displayLabel = displayLabel, infoLabel = infoLabel, highlight = nil, hasDisplayName = true}
-	else
-		local textLabel = Instance.new("TextLabel")
-		textLabel.Name = "InfoLabel"
-		textLabel.Size = UDim2.new(1, 0, 1, 0)
-		textLabel.BackgroundTransparency = 1
-		textLabel.TextColor3 = teamColor
-		textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-		textLabel.TextStrokeTransparency = 0.3
-		textLabel.TextSize = 13
-		textLabel.Font = Enum.Font.GothamBold
-		textLabel.Text = ""
-		textLabel.TextXAlignment = Enum.TextXAlignment.Center
-		textLabel.Parent = billboardGui
-		playerOverlayData[targetPlayer] = {gui = billboardGui, displayLabel = nil, infoLabel = textLabel, highlight = nil, hasDisplayName = false}
 	end
-	local highlight = Instance.new("Highlight")
-	highlight.Name = "PlayerOverlayHighlight_" .. targetPlayer.Name
-	highlight.Adornee = char
-	highlight.FillColor = teamColor
-	highlight.OutlineColor = teamColor
-	highlight.FillTransparency = 0.5
-	highlight.OutlineTransparency = 0
-	highlight.Parent = char
-	playerOverlayData[targetPlayer].highlight = highlight
+	playerOverlayData[targetPlayer] = {
+		gui = billboardGui,
+		displayLabel = displayLabel,
+		infoLabel = infoLabel,
+		highlight = nil,
+		chams = nil,
+		hasDisplayName = hasDisplayName,
+	}
+	if overlaySettings.showHighlight then
+		local highlight = Instance.new("Highlight")
+		highlight.Name = "PlayerOverlayHighlight_" .. targetPlayer.Name
+		highlight.Adornee = char
+		highlight.FillColor = teamColor
+		highlight.OutlineColor = teamColor
+		highlight.FillTransparency = 0.5
+		highlight.OutlineTransparency = 0
+		highlight.Parent = char
+		playerOverlayData[targetPlayer].highlight = highlight
+	end
+	if overlaySettings.showChams then
+		playerOverlayData[targetPlayer].chams = createChams(targetPlayer)
+	end
 end
 
 local function updatePlayerOverlay()
 	if not playerOverlayEnabled then return end
 	for _, targetPlayer in pairs(Players:GetPlayers()) do
 		if targetPlayer ~= player then
-			local char = targetPlayer.Character
-			if char and (char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart")) then
-				local humanoid = char:FindFirstChildOfClass("Humanoid")
-				if humanoid and humanoid.Health <= 0 then
-					removePlayerOverlay(targetPlayer)
-				else
-					local needsRecreate = false
-					if not playerOverlayData[targetPlayer] then
-						needsRecreate = true
-					elseif not playerOverlayData[targetPlayer].gui or not playerOverlayData[targetPlayer].gui.Parent then
-						needsRecreate = true
-					elseif not playerOverlayData[targetPlayer].highlight or not playerOverlayData[targetPlayer].highlight.Parent then
-						needsRecreate = true
-					end
-					if needsRecreate then createPlayerOverlay(targetPlayer) end
-					local data = playerOverlayData[targetPlayer]
-					if data and data.infoLabel then
-						local teamColor = getTeamColor(targetPlayer)
-						local myHrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-						local targetHrp = char:FindFirstChild("HumanoidRootPart")
-						local studsText = "?"
-						if myHrp and targetHrp then
-							studsText = tostring(math.floor((myHrp.Position - targetHrp.Position).Magnitude))
-						end
-						local hpText = ""
-						if humanoid then
-							hpText = math.floor(humanoid.Health) .. "/" .. math.floor(humanoid.MaxHealth) .. " HP"
-						end
-						if data.hasDisplayName then
-							if data.displayLabel then data.displayLabel.TextColor3 = teamColor end
-							data.infoLabel.Text = studsText .. " studs | @" .. targetPlayer.Name .. " | " .. hpText
-						else
-							data.infoLabel.Text = studsText .. " studs | " .. targetPlayer.Name .. " | " .. hpText
-							data.infoLabel.TextColor3 = teamColor
-						end
-						if data.highlight then
-							data.highlight.FillColor = teamColor
-							data.highlight.OutlineColor = teamColor
-						end
-					end
-				end
-			else
+			if not isTargetAllowed(targetPlayer) then
 				removePlayerOverlay(targetPlayer)
+			else
+				local char = targetPlayer.Character
+				if char and (char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart")) then
+					local humanoid = char:FindFirstChildOfClass("Humanoid")
+					if humanoid and humanoid.Health <= 0 then
+						removePlayerOverlay(targetPlayer)
+					else
+						local needsRecreate = false
+						if not playerOverlayData[targetPlayer] then
+							needsRecreate = true
+						elseif not playerOverlayData[targetPlayer].gui then
+							needsRecreate = true
+						elseif overlaySettings.showName and not playerOverlayData[targetPlayer].gui.Parent then
+							needsRecreate = true
+						elseif overlaySettings.showHighlight and (not playerOverlayData[targetPlayer].highlight or not playerOverlayData[targetPlayer].highlight.Parent) then
+							needsRecreate = true
+						elseif not overlaySettings.showHighlight and playerOverlayData[targetPlayer].highlight and playerOverlayData[targetPlayer].highlight.Parent then
+							playerOverlayData[targetPlayer].highlight:Destroy()
+							playerOverlayData[targetPlayer].highlight = nil
+						end
+						if needsRecreate then createPlayerOverlay(targetPlayer) end
+						local data = playerOverlayData[targetPlayer]
+						if data and data.infoLabel then
+							local teamColor = getTeamColor(targetPlayer)
+							local myHrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+							local targetHrp = char:FindFirstChild("HumanoidRootPart")
+							local infoParts = {}
+							if overlaySettings.showDistance then
+								if myHrp and targetHrp then
+									table.insert(infoParts, tostring(math.floor((myHrp.Position - targetHrp.Position).Magnitude)) .. " studs")
+								end
+							end
+							if overlaySettings.showHealth and humanoid then
+								table.insert(infoParts, math.floor(humanoid.Health) .. "/" .. math.floor(humanoid.MaxHealth) .. " HP")
+							end
+							if overlaySettings.showName then
+								table.insert(infoParts, "@" .. targetPlayer.Name)
+							end
+							data.infoLabel.Text = table.concat(infoParts, " | ")
+							local labelColor = overlaySettings.teamColor and teamColor or Color3.fromRGB(255, 255, 255)
+							data.infoLabel.TextColor3 = labelColor
+							if data.displayLabel then
+								data.displayLabel.TextColor3 = labelColor
+							end
+						end
+						if data and data.highlight then
+							local hlColor = overlaySettings.teamColor and teamColor or Color3.fromRGB(255, 255, 255)
+							data.highlight.FillColor = hlColor
+							data.highlight.OutlineColor = hlColor
+						end
+						if data and data.chams then
+							local chamsColor = overlaySettings.teamColor and teamColor or Color3.fromRGB(255, 255, 255)
+							data.chams.FillColor = chamsColor
+							data.chams.OutlineColor = chamsColor
+						end
+					end
+				else
+					removePlayerOverlay(targetPlayer)
+				end
 			end
 		end
 	end
@@ -963,7 +1271,7 @@ local function forceRestoreAllExpanders()
 	end
 end
 
-local function updateExpanders()
+updateExpanders = function()
 	if not isEnabled then return end
 	for _, v in pairs(Players:GetPlayers()) do
 		if v ~= player and v.Character then
@@ -977,21 +1285,33 @@ local function updateExpanders()
 			if not originalData[char] then continue end
 			modifiedChars[char] = v
 			local teamColor = getTeamColor(v)
-			for _, partName in pairs(expanderPartNames) do
-				local part = char:FindFirstChild(partName)
-				if part and part:IsA("BasePart") then
+				for _, partName in pairs(expanderPartNames) do
+					local part = char:FindFirstChild(partName)
+					if part and part:IsA("BasePart") then
+						local partCfg = expanderPartsSettings[partName]
+						if partCfg and not partCfg.enabled then
+							local originalPartData = originalData[char][partName]
+							if originalPartData then
+								part.Size = originalPartData.Size
+								part.Transparency = originalPartData.Transparency
+								part.CanCollide = originalPartData.CanCollide
+								part.Color = originalPartData.Color
+								part.Material = originalPartData.Material
+								part.CastShadow = originalPartData.CastShadow
+							end
+							continue
+						end
+						local multiplier = 1
+						if partCfg then
+							multiplier = partCfg.size
+						end
+					local partSize = math.max(0.5, expanderSize * multiplier)
 					if partName == "HumanoidRootPart" then
-						part.Size = Vector3.new(expanderSize, expanderSize, expanderSize)
+						part.Size = Vector3.new(partSize, partSize, partSize)
 						part.Transparency = 1
 						part.CanCollide = false
-					elseif partName == "Head" then
-						part.Size = Vector3.new(expanderSize * 0.8, expanderSize * 0.8, expanderSize * 0.8)
-						part.CanCollide = false
-						part.Color = teamColor
-						part.Material = Enum.Material.ForceField
-						part.Transparency = disableTransparency and 1 or 0.7
 					else
-						part.Size = Vector3.new(expanderSize * 0.7, expanderSize * 0.7, expanderSize * 0.7)
+						part.Size = Vector3.new(partSize, partSize, partSize)
 						part.CanCollide = false
 						part.Color = teamColor
 						part.Material = Enum.Material.ForceField
@@ -1029,6 +1349,15 @@ local function resetExpanders()
 	end
 end
 
+local function updatePartConfigBoxes()
+	for partName, partCfg in pairs(expanderPartsSettings) do
+		local row = partRows[partName]
+		if row and row.box then
+			row.box.Text = string.format("%g", partCfg.size)
+		end
+	end
+end
+
 local function doApplyExpander()
 	local inputValue = tonumber(textBox.Text)
 	if inputValue then
@@ -1058,6 +1387,10 @@ end
 
 local function doMinimize()
 	if confirmFrame.Visible or settingsFrame.Visible then return end
+	if targetPanelOpen then
+		targetPanel.Visible = false
+		targetPanelOpen = false
+	end
 	isMinimized = not isMinimized
 	if isMinimized then
 		TweenService:Create(mainFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 260, 0, 60)}):Play()
@@ -1090,9 +1423,7 @@ local function doTogglePlayerOverlay()
 	if playerOverlayEnabled then
 		TweenService:Create(playerOverlayToggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(50, 200, 100)}):Play()
 		playerOverlayToggleButton.Text = "Player Overlay: ON"
-		for _, v in pairs(Players:GetPlayers()) do
-			if v ~= player then createPlayerOverlay(v) end
-		end
+		refreshPlayerOverlay()
 	else
 		TweenService:Create(playerOverlayToggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(220, 50, 50)}):Play()
 		playerOverlayToggleButton.Text = "Player Overlay: OFF"
@@ -1147,6 +1478,50 @@ local function applyLoadedSettings()
 			disableTransparencyButton.Text = "OFF"
 		end
 	end
+	if savedData.expanderParts then
+		for partName, partCfg in pairs(savedData.expanderParts) do
+			if expanderPartsSettings[partName] then
+				if partCfg.enabled ~= nil then
+					expanderPartsSettings[partName].enabled = partCfg.enabled
+				end
+				if partCfg.size then
+					expanderPartsSettings[partName].size = math.max(0.1, partCfg.size)
+				end
+			end
+		end
+		updatePartConfigBoxes()
+		for partName, partCfg in pairs(expanderPartsSettings) do
+			local row = partRows[partName]
+			if row and row.toggle then
+				row.toggle.Text = partCfg.enabled and "ON" or "OFF"
+				row.toggle.BackgroundColor3 = partCfg.enabled and Color3.fromRGB(50, 200, 100) or Color3.fromRGB(220, 50, 50)
+			end
+		end
+	end
+	if savedData.overlaySettings then
+		for key, value in pairs(savedData.overlaySettings) do
+			if overlaySettings[key] ~= nil then
+				overlaySettings[key] = value
+			end
+		end
+		for key, row in pairs(overlayToggles) do
+			local val = overlaySettings[key]
+			row.button.Text = val and "ON" or "OFF"
+			row.button.BackgroundColor3 = val and Color3.fromRGB(50, 200, 100) or Color3.fromRGB(220, 50, 50)
+		end
+	end
+	if savedData.targetMode then
+		targetMode = savedData.targetMode
+	end
+	if savedData.selectedPlayers then
+		selectedPlayers = {}
+		for _, name in pairs(savedData.selectedPlayers) do
+			local found = Players:FindFirstChild(name)
+			if found then
+				table.insert(selectedPlayers, found)
+			end
+		end
+	end
 	if savedData.keybinds then
 		for action, keyName in pairs(savedData.keybinds) do
 			if keyName and keyName ~= "None" then
@@ -1167,6 +1542,198 @@ local function applyLoadedSettings()
 	end
 end
 
+refreshPlayerOverlay = function()
+	if not playerOverlayEnabled then return end
+	for _, targetPlayer in pairs(Players:GetPlayers()) do
+		if targetPlayer ~= player and isTargetAllowed(targetPlayer) then
+			removePlayerOverlay(targetPlayer)
+			createPlayerOverlay(targetPlayer)
+		elseif targetPlayer ~= player then
+			removePlayerOverlay(targetPlayer)
+		end
+	end
+end
+
+local targetMenuFrame = Instance.new("Frame")
+targetMenuFrame.Name = "TargetMenuFrame"
+targetMenuFrame.Size = UDim2.new(0, 180, 0, 250)
+targetMenuFrame.Position = UDim2.new(0.5, -90, 0, 37)
+targetMenuFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 32)
+targetMenuFrame.BorderSizePixel = 0
+targetMenuFrame.Visible = false
+targetMenuFrame.ZIndex = 20
+targetMenuFrame.Parent = mainFrame
+
+local targetMenuCorner = Instance.new("UICorner")
+targetMenuCorner.CornerRadius = UDim.new(0, 10)
+targetMenuCorner.Parent = targetMenuFrame
+
+local targetMenuStroke = Instance.new("UIStroke")
+targetMenuStroke.Color = Color3.fromRGB(80, 150, 255)
+targetMenuStroke.Thickness = 1
+targetMenuStroke.Transparency = 0.5
+targetMenuStroke.Parent = targetMenuFrame
+
+local targetScroll = Instance.new("ScrollingFrame")
+targetScroll.Size = UDim2.new(1, 0, 1, 0)
+targetScroll.Position = UDim2.new(0, 0, 0, 0)
+targetScroll.BackgroundTransparency = 1
+targetScroll.BorderSizePixel = 0
+targetScroll.ZIndex = 21
+targetScroll.ScrollBarThickness = 3
+targetScroll.ScrollBarImageColor3 = Color3.fromRGB(80, 150, 255)
+targetScroll.CanvasSize = UDim2.new(0, 0, 0, 200)
+targetScroll.Parent = targetMenuFrame
+
+local targetMenuHeader = Instance.new("TextLabel")
+targetMenuHeader.Size = UDim2.new(1, 0, 0, 26)
+targetMenuHeader.Position = UDim2.new(0, 0, 0, 0)
+targetMenuHeader.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+targetMenuHeader.Text = "Select Target"
+targetMenuHeader.TextColor3 = Color3.fromRGB(255, 255, 255)
+targetMenuHeader.TextSize = 13
+targetMenuHeader.Font = Enum.Font.GothamBold
+targetMenuHeader.ZIndex = 21
+targetMenuHeader.Parent = targetScroll
+
+local targetMenuHeaderFix = Instance.new("Frame")
+targetMenuHeaderFix.Size = UDim2.new(1, 0, 0, 10)
+targetMenuHeaderFix.Position = UDim2.new(0, 0, 0, 26)
+targetMenuHeaderFix.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+targetMenuHeaderFix.BorderSizePixel = 0
+targetMenuHeaderFix.ZIndex = 21
+targetMenuHeaderFix.Parent = targetScroll
+
+targetPanel = targetMenuFrame
+
+local function makeTargetItem(labelText, initialOn, yPos, isHeader)
+	local item = Instance.new("TextButton")
+	item.Size = UDim2.new(1, -8, 0, 28)
+	item.Position = UDim2.new(0, 4, 0, yPos)
+	item.BackgroundColor3 = isHeader and Color3.fromRGB(30, 30, 42) or (initialOn and Color3.fromRGB(50, 90, 140) or Color3.fromRGB(40, 40, 55))
+	item.BorderSizePixel = 0
+	item.Text = labelText
+	item.TextColor3 = Color3.fromRGB(255, 255, 255)
+	item.TextSize = 12
+	item.Font = isHeader and Enum.Font.GothamBold or Enum.Font.Gotham
+	item.TextXAlignment = Enum.TextXAlignment.Left
+	item.ZIndex = 21
+	item.Parent = targetScroll
+
+	local itemCorner = Instance.new("UICorner")
+	itemCorner.CornerRadius = UDim.new(0, 6)
+	itemCorner.Parent = item
+
+	local checkLabel = Instance.new("TextLabel")
+	checkLabel.Size = UDim2.new(0, 20, 1, 0)
+	checkLabel.Position = UDim2.new(1, -24, 0, 0)
+	checkLabel.BackgroundTransparency = 1
+	checkLabel.Text = initialOn and "✓" or ""
+	checkLabel.TextColor3 = Color3.fromRGB(80, 200, 120)
+	checkLabel.TextSize = 13
+	checkLabel.Font = Enum.Font.GothamBold
+	checkLabel.ZIndex = 21
+	checkLabel.Parent = item
+
+	return item
+end
+
+local function buildTargetPanel()
+	for _, old in pairs(targetPanelItems) do
+		if old and old.Parent then old:Destroy() end
+	end
+	targetPanelItems = {}
+
+	local yPos = 34
+	local canvas = 40
+
+	local function addItem(labelText, initialOn, onSelect, isHeader)
+		local item = makeTargetItem(labelText, initialOn, yPos, isHeader)
+		targetPanelItems[#targetPanelItems + 1] = item
+		item.MouseButton1Click:Connect(onSelect)
+		yPos = yPos + 30
+		canvas = yPos
+	end
+
+	addItem("All", targetMode == "all", function()
+		targetMode = "all"
+		buildTargetPanel()
+		refreshPlayerOverlay()
+		collectAndSave()
+	end, true)
+	addItem("Players (default)", targetMode == "players", function()
+		targetMode = "players"
+		buildTargetPanel()
+		refreshPlayerOverlay()
+		collectAndSave()
+	end)
+	addItem("NPC", targetMode == "npc", function()
+		targetMode = "npc"
+		buildTargetPanel()
+		refreshPlayerOverlay()
+		collectAndSave()
+	end)
+	addItem("Team", targetMode == "team", function()
+		targetMode = "team"
+		buildTargetPanel()
+		refreshPlayerOverlay()
+		collectAndSave()
+	end)
+
+	local playersList = Players:GetPlayers()
+	table.sort(playersList, function(a, b)
+		return a.Name:lower() < b.Name:lower()
+	end)
+	for _, targetPlayer in pairs(playersList) do
+		if targetPlayer ~= player then
+			local isSelected = false
+			for _, selected in pairs(selectedPlayers) do
+				if selected == targetPlayer then
+					isSelected = true
+					break
+				end
+			end
+			local p = targetPlayer
+			addItem(p.Name, isSelected, function()
+				local found = false
+				for i, selected in pairs(selectedPlayers) do
+					if selected == p then
+						table.remove(selectedPlayers, i)
+						found = true
+						break
+					end
+				end
+				if not found then
+					table.insert(selectedPlayers, p)
+				end
+				buildTargetPanel()
+				refreshPlayerOverlay()
+				collectAndSave()
+			end)
+		end
+	end
+
+	targetScroll.CanvasSize = UDim2.new(0, 0, 0, canvas)
+end
+
+targetButtonTop.MouseButton1Click:Connect(function()
+	if confirmFrame.Visible or settingsFrame.Visible then return end
+	animateButton(targetButtonTop)
+	targetPanelOpen = not targetPanelOpen
+	targetPanel.Visible = targetPanelOpen
+	if targetPanelOpen then
+		buildTargetPanel()
+	end
+end)
+
+targetButtonTop.MouseEnter:Connect(function()
+	TweenService:Create(targetButtonTop, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120, 120, 140)}):Play()
+end)
+
+targetButtonTop.MouseLeave:Connect(function()
+	TweenService:Create(targetButtonTop, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(100, 100, 120)}):Play()
+end)
+
 for _, v in pairs(Players:GetPlayers()) do
 	if v ~= player then
 		setupCharacterAdded(v)
@@ -1177,11 +1744,17 @@ Players.PlayerAdded:Connect(function(newPlayer)
 	setupCharacterAdded(newPlayer)
 	task.wait(1)
 	if isEnabled then updateExpanders() end
-	if playerOverlayEnabled then createPlayerOverlay(newPlayer) end
+	if playerOverlayEnabled and isTargetAllowed(newPlayer) then createPlayerOverlay(newPlayer) end
 end)
 
 Players.PlayerRemoving:Connect(function(removedPlayer)
 	removePlayerOverlay(removedPlayer)
+	for i, selected in pairs(selectedPlayers) do
+		if selected == removedPlayer then
+			table.remove(selectedPlayers, i)
+			break
+		end
+	end
 	if characterConnections[removedPlayer] then
 		characterConnections[removedPlayer]:Disconnect()
 		characterConnections[removedPlayer] = nil
@@ -1280,6 +1853,10 @@ end)
 
 settingsButtonTop.MouseButton1Click:Connect(function()
 	if confirmFrame.Visible or settingsFrame.Visible then return end
+	if targetPanelOpen then
+		targetPanel.Visible = false
+		targetPanelOpen = false
+	end
 	animateButton(settingsButtonTop)
 	if isMinimized then
 		isMinimized = false
