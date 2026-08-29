@@ -1,6 +1,6 @@
-# Hitbox expander
+# Hitbox expander & player overlay
 
-**Hitbox expander** is a universal Roblox utility with a clean, animated interface.
+**Hitbox expander & player overlay** is a universal Roblox utility with a clean, animated interface.
 
 ## Features
 
@@ -15,4 +15,4 @@
 
 ## Script
 
-The complete script is available in [`Hitbox expander.lua`](./Hitbox%20expander.lua).
+The complete script is available in [`Hitbox expander & player overlay.lua`](./Hitbox%20expander%20%26%20player%20overlay.lua).
