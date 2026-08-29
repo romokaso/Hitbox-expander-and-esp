@@ -772,7 +772,7 @@ local function createPlayerOverlay(targetPlayer)
 	local hasDisplayName = string.lower(targetPlayer.DisplayName) ~= string.lower(targetPlayer.Name)
 	local guiHeight = hasDisplayName and 36 or 20
 	local billboardGui = Instance.new("BillboardGui")
-	billboardGui.Name = "HitboxExpanderPlayerOverlayBillboard_" .. targetPlayer.Name
+	billboardGui.Name = "PlayerOverlayBillboard_" .. targetPlayer.Name
 	billboardGui.AlwaysOnTop = true
 	billboardGui.Size = UDim2.new(0, 300, 0, guiHeight)
 	billboardGui.StudsOffset = Vector3.new(0, 3.2, 0)
@@ -821,7 +821,7 @@ local function createPlayerOverlay(targetPlayer)
 		overlayData[targetPlayer] = {gui = billboardGui, displayLabel = nil, infoLabel = textLabel, highlight = nil, hasDisplayName = false}
 	end
 	local highlight = Instance.new("Highlight")
-	highlight.Name = "HitboxExpanderPlayerOverlayHighlight_" .. targetPlayer.Name
+	highlight.Name = "PlayerOverlayHighlight_" .. targetPlayer.Name
 	highlight.Adornee = char
 	highlight.FillColor = teamColor
 	highlight.OutlineColor = teamColor
