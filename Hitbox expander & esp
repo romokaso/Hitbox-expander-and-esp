@@ -30,7 +30,7 @@ end
 local savedData = loadSettings()
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "HitboxChanger"
+screenGui.Name = "HitboxExpander"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
@@ -77,7 +77,7 @@ local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, -100, 1, 0)
 titleLabel.Position = UDim2.new(0, 10, 0, 0)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "Hitbox changer & esp"
+titleLabel.Text = "Hitbox expander & esp"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 15
 titleLabel.Font = Enum.Font.GothamBold
