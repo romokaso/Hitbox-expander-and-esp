@@ -6,7 +6,7 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
-local SAVE_FILE = "hitbox_settings.json"
+local SAVE_FILE = "hitbox_expander_settings.json"
 
 local function saveSettings(data)
 	pcall(function()
@@ -30,7 +30,7 @@ end
 local savedData = loadSettings()
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "HitboxChanger"
+screenGui.Name = "HitboxExpander"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
@@ -77,7 +77,7 @@ local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, -100, 1, 0)
 titleLabel.Position = UDim2.new(0, 10, 0, 0)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "Hitbox changer & esp"
+titleLabel.Text = "Hitbox expander"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 15
 titleLabel.Font = Enum.Font.GothamBold
@@ -144,7 +144,7 @@ local sizeLabel = Instance.new("TextLabel")
 sizeLabel.Size = UDim2.new(0, 75, 0, 22)
 sizeLabel.Position = UDim2.new(0, 12, 0, 8)
 sizeLabel.BackgroundTransparency = 1
-sizeLabel.Text = "Hitbox Size:"
+sizeLabel.Text = "Expander Size:"
 sizeLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
 sizeLabel.TextSize = 12
 sizeLabel.Font = Enum.Font.Gotham
@@ -192,7 +192,7 @@ toggleButton.Size = UDim2.new(0, 236, 0, 32)
 toggleButton.Position = UDim2.new(0, 12, 0, 42)
 toggleButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
 toggleButton.BorderSizePixel = 0
-toggleButton.Text = "Hitbox: OFF"
+toggleButton.Text = "Expander: OFF"
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.TextSize = 13
 toggleButton.Font = Enum.Font.GothamBold
@@ -497,11 +497,11 @@ local function makeKeybindRow(labelText, yPos)
 	return rowLabel, rowButton, rowStroke
 end
 
-local keybindHitboxLabel, keybindHitboxButton, keybindHitboxStroke = makeKeybindRow("Toggle Hitbox:", 142)
+local keybindHitboxLabel, keybindHitboxButton, keybindHitboxStroke = makeKeybindRow("Toggle expander:", 142)
 local keybindEspLabel, keybindEspButton, keybindEspStroke = makeKeybindRow("Toggle ESP:", 178)
 local keybindGuiLabel, keybindGuiButton, keybindGuiStroke = makeKeybindRow("Toggle GUI:", 214)
 local keybindMinimizeLabel, keybindMinimizeButton, keybindMinimizeStroke = makeKeybindRow("Minimize:", 250)
-local keybindApplyLabel, keybindApplyButton, keybindApplyStroke = makeKeybindRow("Apply Hitbox:", 286)
+local keybindApplyLabel, keybindApplyButton, keybindApplyStroke = makeKeybindRow("Apply expander:", 286)
 
 local hitboxSize = 10
 local isEnabled = false
@@ -1076,11 +1076,11 @@ local function doToggleHitbox()
 	isEnabled = not isEnabled
 	if isEnabled then
 		TweenService:Create(toggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(50, 200, 100)}):Play()
-		toggleButton.Text = "Hitbox: ON"
+		toggleButton.Text = "Expander: ON"
 		updateHitboxes()
 	else
 		TweenService:Create(toggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(220, 50, 50)}):Play()
-		toggleButton.Text = "Hitbox: OFF"
+		toggleButton.Text = "Expander: OFF"
 		resetHitboxes()
 	end
 end
