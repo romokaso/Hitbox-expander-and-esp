@@ -7,11 +7,7 @@ local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 local APP_NAME = "Hitbox expander & player overlay"
-local APP_ID = "HitboxExpanderPlayerOverlay"
 local SETTINGS_FILE = "hitbox_expander_player_overlay_settings.json"
-local WINDOW_WIDTH = 360
-local WINDOW_HEIGHT = 180
-local MINIMIZED_HEIGHT = 60
 
 local function saveSettings(data)
 	pcall(function()
@@ -35,15 +31,15 @@ end
 local savedData = loadSettings()
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = APP_ID
+screenGui.Name = "HitboxExpanderPlayerOverlay"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, WINDOW_WIDTH, 0, WINDOW_HEIGHT)
-mainFrame.Position = UDim2.new(0.5, -(WINDOW_WIDTH / 2), 0.5, -(WINDOW_HEIGHT / 2))
+mainFrame.Size = UDim2.new(0, 260, 0, 180)
+mainFrame.Position = UDim2.new(0.5, -130, 0.5, -90)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
@@ -84,10 +80,16 @@ titleLabel.Position = UDim2.new(0, 10, 0, 0)
 titleLabel.BackgroundTransparency = 1
 titleLabel.Text = APP_NAME
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.TextSize = 14
+titleLabel.TextSize = 15
+titleLabel.TextScaled = true
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 titleLabel.Parent = titleBar
+
+local titleTextSizeConstraint = Instance.new("UITextSizeConstraint")
+titleTextSizeConstraint.MinTextSize = 8
+titleTextSizeConstraint.MaxTextSize = 15
+titleTextSizeConstraint.Parent = titleLabel
 
 local settingsButtonTop = Instance.new("TextButton")
 settingsButtonTop.Name = "SettingsButtonTop"
@@ -178,7 +180,7 @@ expansionSizeInputStroke.Thickness = 1
 expansionSizeInputStroke.Parent = expansionSizeInput
 
 local applyExpansionButton = Instance.new("TextButton")
-applyExpansionButton.Size = UDim2.new(1, -184, 0, 28)
+applyExpansionButton.Size = UDim2.new(0, 76, 0, 28)
 applyExpansionButton.Position = UDim2.new(0, 172, 0, 6)
 applyExpansionButton.BackgroundColor3 = Color3.fromRGB(80, 150, 255)
 applyExpansionButton.BorderSizePixel = 0
@@ -193,7 +195,7 @@ applyExpansionCorner.CornerRadius = UDim.new(0, 7)
 applyExpansionCorner.Parent = applyExpansionButton
 
 local expanderToggleButton = Instance.new("TextButton")
-expanderToggleButton.Size = UDim2.new(1, -24, 0, 32)
+expanderToggleButton.Size = UDim2.new(0, 236, 0, 32)
 expanderToggleButton.Position = UDim2.new(0, 12, 0, 42)
 expanderToggleButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
 expanderToggleButton.BorderSizePixel = 0
@@ -208,7 +210,7 @@ expanderToggleCorner.CornerRadius = UDim.new(0, 7)
 expanderToggleCorner.Parent = expanderToggleButton
 
 local overlayToggleButton = Instance.new("TextButton")
-overlayToggleButton.Size = UDim2.new(1, -24, 0, 32)
+overlayToggleButton.Size = UDim2.new(0, 236, 0, 32)
 overlayToggleButton.Position = UDim2.new(0, 12, 0, 80)
 overlayToggleButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
 overlayToggleButton.BorderSizePixel = 0
@@ -226,7 +228,7 @@ local footerLabel = Instance.new("TextButton")
 footerLabel.Size = UDim2.new(1, 0, 0, 25)
 footerLabel.Position = UDim2.new(0, 0, 1, -25)
 footerLabel.BackgroundTransparency = 1
-footerLabel.Text = APP_NAME .. " • by romokaso"
+footerLabel.Text = "by: romokaso"
 footerLabel.TextColor3 = Color3.fromRGB(120, 120, 130)
 footerLabel.TextSize = 10
 footerLabel.Font = Enum.Font.GothamBold
@@ -236,7 +238,7 @@ local footerLabelMinimized = Instance.new("TextButton")
 footerLabelMinimized.Size = UDim2.new(1, 0, 0, 25)
 footerLabelMinimized.Position = UDim2.new(0, 0, 0, 35)
 footerLabelMinimized.BackgroundTransparency = 1
-footerLabelMinimized.Text = APP_NAME .. " • by romokaso"
+footerLabelMinimized.Text = "by: romokaso"
 footerLabelMinimized.TextColor3 = Color3.fromRGB(120, 120, 130)
 footerLabelMinimized.TextSize = 10
 footerLabelMinimized.Font = Enum.Font.GothamBold
@@ -262,7 +264,7 @@ local confirmText = Instance.new("TextLabel")
 confirmText.Size = UDim2.new(1, -24, 0, 40)
 confirmText.Position = UDim2.new(0, 12, 0, 45)
 confirmText.BackgroundTransparency = 1
-confirmText.Text = "Are you sure you want\nto close " .. APP_NAME .. "?"
+confirmText.Text = "Are you sure you want\nto close the GUI?"
 confirmText.TextColor3 = Color3.fromRGB(255, 255, 255)
 confirmText.TextSize = 13
 confirmText.Font = Enum.Font.GothamBold
@@ -271,7 +273,7 @@ confirmText.ZIndex = 11
 confirmText.Parent = confirmFrame
 
 local yesButton = Instance.new("TextButton")
-yesButton.Size = UDim2.new(0.5, -26, 0, 32)
+yesButton.Size = UDim2.new(0, 105, 0, 32)
 yesButton.Position = UDim2.new(0, 20, 0, 100)
 yesButton.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
 yesButton.BorderSizePixel = 0
@@ -287,8 +289,8 @@ yesCorner.CornerRadius = UDim.new(0, 7)
 yesCorner.Parent = yesButton
 
 local noButton = Instance.new("TextButton")
-noButton.Size = UDim2.new(0.5, -26, 0, 32)
-noButton.Position = UDim2.new(0.5, 6, 0, 100)
+noButton.Size = UDim2.new(0, 105, 0, 32)
+noButton.Position = UDim2.new(0, 135, 0, 100)
 noButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
 noButton.BorderSizePixel = 0
 noButton.Text = "No"
@@ -339,9 +341,9 @@ local settingsTitleLabel = Instance.new("TextLabel")
 settingsTitleLabel.Size = UDim2.new(1, -50, 1, 0)
 settingsTitleLabel.Position = UDim2.new(0, 10, 0, 0)
 settingsTitleLabel.BackgroundTransparency = 1
-settingsTitleLabel.Text = APP_NAME .. " settings"
+settingsTitleLabel.Text = "Settings"
 settingsTitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-settingsTitleLabel.TextSize = 13
+settingsTitleLabel.TextSize = 15
 settingsTitleLabel.Font = Enum.Font.GothamBold
 settingsTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 settingsTitleLabel.ZIndex = 11
@@ -387,7 +389,7 @@ themeLabel.ZIndex = 11
 themeLabel.Parent = settingsContentFrame
 
 local darkButton = Instance.new("TextButton")
-darkButton.Size = UDim2.new(0.5, -18, 0, 32)
+darkButton.Size = UDim2.new(0, 110, 0, 32)
 darkButton.Position = UDim2.new(0, 12, 0, 36)
 darkButton.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 darkButton.BorderSizePixel = 0
@@ -409,8 +411,8 @@ darkStroke.ZIndex = 11
 darkStroke.Parent = darkButton
 
 local lightButton = Instance.new("TextButton")
-lightButton.Size = UDim2.new(0.5, -18, 0, 32)
-lightButton.Position = UDim2.new(0.5, 6, 0, 36)
+lightButton.Size = UDim2.new(0, 110, 0, 32)
+lightButton.Position = UDim2.new(0, 138, 0, 36)
 lightButton.BackgroundColor3 = Color3.fromRGB(240, 240, 250)
 lightButton.BorderSizePixel = 0
 lightButton.Text = "Light"
@@ -478,7 +480,7 @@ local function makeKeybindRow(labelText, yPos)
 	rowLabel.Parent = settingsContentFrame
 
 	local rowButton = Instance.new("TextButton")
-	rowButton.Size = UDim2.new(1, -164, 0, 28)
+	rowButton.Size = UDim2.new(0, 90, 0, 28)
 	rowButton.Position = UDim2.new(0, 152, 0, yPos)
 	rowButton.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
 	rowButton.BorderSizePixel = 0
@@ -770,7 +772,7 @@ local function createPlayerOverlay(targetPlayer)
 	local hasDisplayName = string.lower(targetPlayer.DisplayName) ~= string.lower(targetPlayer.Name)
 	local guiHeight = hasDisplayName and 36 or 20
 	local billboardGui = Instance.new("BillboardGui")
-	billboardGui.Name = APP_ID .. "Billboard_" .. targetPlayer.Name
+	billboardGui.Name = "HitboxExpanderPlayerOverlayBillboard_" .. targetPlayer.Name
 	billboardGui.AlwaysOnTop = true
 	billboardGui.Size = UDim2.new(0, 300, 0, guiHeight)
 	billboardGui.StudsOffset = Vector3.new(0, 3.2, 0)
@@ -819,7 +821,7 @@ local function createPlayerOverlay(targetPlayer)
 		overlayData[targetPlayer] = {gui = billboardGui, displayLabel = nil, infoLabel = textLabel, highlight = nil, hasDisplayName = false}
 	end
 	local highlight = Instance.new("Highlight")
-	highlight.Name = APP_ID .. "Highlight_" .. targetPlayer.Name
+	highlight.Name = "HitboxExpanderPlayerOverlayHighlight_" .. targetPlayer.Name
 	highlight.Adornee = char
 	highlight.FillColor = teamColor
 	highlight.OutlineColor = teamColor
@@ -1064,12 +1066,12 @@ local function doMinimize()
 	if confirmFrame.Visible or settingsFrame.Visible then return end
 	isMinimized = not isMinimized
 	if isMinimized then
-		TweenService:Create(mainFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, WINDOW_WIDTH, 0, MINIMIZED_HEIGHT)}):Play()
+		TweenService:Create(mainFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 260, 0, 60)}):Play()
 		contentFrame.Visible = false
 		footerLabel.Visible = false
 		footerLabelMinimized.Visible = true
 	else
-		TweenService:Create(mainFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, WINDOW_WIDTH, 0, WINDOW_HEIGHT)}):Play()
+		TweenService:Create(mainFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 260, 0, 180)}):Play()
 		contentFrame.Visible = true
 		footerLabel.Visible = true
 		footerLabelMinimized.Visible = false
@@ -1234,7 +1236,7 @@ closeButton.MouseButton1Click:Connect(function()
 	animateButton(closeButton)
 	if isMinimized then
 		isMinimized = false
-		TweenService:Create(mainFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, WINDOW_WIDTH, 0, WINDOW_HEIGHT)}):Play()
+		TweenService:Create(mainFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 260, 0, 180)}):Play()
 		contentFrame.Visible = true
 		footerLabel.Visible = true
 		footerLabelMinimized.Visible = false
@@ -1266,9 +1268,9 @@ yesButton.MouseButton1Click:Connect(function()
 		Size = UDim2.new(0, 0, 0, 0),
 		Position = UDim2.new(
 			mainFrame.Position.X.Scale,
-			mainFrame.Position.X.Offset + WINDOW_WIDTH / 2,
+			mainFrame.Position.X.Offset + 130,
 			mainFrame.Position.Y.Scale,
-			mainFrame.Position.Y.Offset + WINDOW_HEIGHT / 2
+			mainFrame.Position.Y.Offset + 90
 		)
 	}):Play()
 	task.wait(0.3)
@@ -1287,7 +1289,7 @@ settingsButtonTop.MouseButton1Click:Connect(function()
 	animateButton(settingsButtonTop)
 	if isMinimized then
 		isMinimized = false
-		TweenService:Create(mainFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, WINDOW_WIDTH, 0, WINDOW_HEIGHT)}):Play()
+		TweenService:Create(mainFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 260, 0, 180)}):Play()
 		contentFrame.Visible = true
 		footerLabel.Visible = true
 		footerLabelMinimized.Visible = false
