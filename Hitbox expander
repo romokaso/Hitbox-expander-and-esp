@@ -6,7 +6,7 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
-local SAVE_FILE = "hitbox_settings.json"
+local SAVE_FILE = "hitbox_expander_settings.json"
 
 local function saveSettings(data)
 	pcall(function()
@@ -30,7 +30,7 @@ end
 local savedData = loadSettings()
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "HitboxChanger"
+screenGui.Name = "HitboxExpander"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
@@ -77,7 +77,7 @@ local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, -100, 1, 0)
 titleLabel.Position = UDim2.new(0, 10, 0, 0)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "Hitbox changer & esp"
+titleLabel.Text = "Hitbox expander"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextSize = 15
 titleLabel.Font = Enum.Font.GothamBold
@@ -141,10 +141,10 @@ contentFrame.BorderSizePixel = 0
 contentFrame.Parent = mainFrame
 
 local sizeLabel = Instance.new("TextLabel")
-sizeLabel.Size = UDim2.new(0, 75, 0, 22)
-sizeLabel.Position = UDim2.new(0, 12, 0, 8)
+sizeLabel.Size = UDim2.new(0, 100, 0, 22)
+sizeLabel.Position = UDim2.new(0, 10, 0, 8)
 sizeLabel.BackgroundTransparency = 1
-sizeLabel.Text = "Hitbox Size:"
+sizeLabel.Text = "Expander Size:"
 sizeLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
 sizeLabel.TextSize = 12
 sizeLabel.Font = Enum.Font.Gotham
@@ -153,7 +153,7 @@ sizeLabel.Parent = contentFrame
 
 local textBox = Instance.new("TextBox")
 textBox.Size = UDim2.new(0, 80, 0, 28)
-textBox.Position = UDim2.new(0, 90, 0, 6)
+textBox.Position = UDim2.new(0, 118, 0, 6)
 textBox.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
 textBox.BorderSizePixel = 0
 textBox.Text = "10"
@@ -174,7 +174,7 @@ textBoxStroke.Parent = textBox
 
 local applyButton = Instance.new("TextButton")
 applyButton.Size = UDim2.new(0, 50, 0, 28)
-applyButton.Position = UDim2.new(0, 178, 0, 6)
+applyButton.Position = UDim2.new(0, 204, 0, 6)
 applyButton.BackgroundColor3 = Color3.fromRGB(80, 150, 255)
 applyButton.BorderSizePixel = 0
 applyButton.Text = "Apply"
@@ -192,7 +192,7 @@ toggleButton.Size = UDim2.new(0, 236, 0, 32)
 toggleButton.Position = UDim2.new(0, 12, 0, 42)
 toggleButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
 toggleButton.BorderSizePixel = 0
-toggleButton.Text = "Hitbox: OFF"
+toggleButton.Text = "Hitbox Expander: OFF"
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.TextSize = 13
 toggleButton.Font = Enum.Font.GothamBold
@@ -497,13 +497,13 @@ local function makeKeybindRow(labelText, yPos)
 	return rowLabel, rowButton, rowStroke
 end
 
-local keybindHitboxLabel, keybindHitboxButton, keybindHitboxStroke = makeKeybindRow("Toggle Hitbox:", 142)
+local keybindExpanderLabel, keybindExpanderButton, keybindExpanderStroke = makeKeybindRow("Toggle Expander:", 142)
 local keybindEspLabel, keybindEspButton, keybindEspStroke = makeKeybindRow("Toggle ESP:", 178)
 local keybindGuiLabel, keybindGuiButton, keybindGuiStroke = makeKeybindRow("Toggle GUI:", 214)
 local keybindMinimizeLabel, keybindMinimizeButton, keybindMinimizeStroke = makeKeybindRow("Minimize:", 250)
-local keybindApplyLabel, keybindApplyButton, keybindApplyStroke = makeKeybindRow("Apply Hitbox:", 286)
+local keybindApplyLabel, keybindApplyButton, keybindApplyStroke = makeKeybindRow("Apply Expander:", 286)
 
-local hitboxSize = 10
+local expanderSize = 10
 local isEnabled = false
 local isMinimized = false
 local currentTheme = "dark"
@@ -522,7 +522,7 @@ local guiVisible = true
 local modifiedChars = {}
 
 local keybinds = {
-	hitbox = nil,
+	expander = nil,
 	esp = nil,
 	gui = nil,
 	minimize = nil,
@@ -532,7 +532,7 @@ local keybinds = {
 local listeningFor = nil
 
 local keybindButtons = {
-	hitbox = keybindHitboxButton,
+	expander = keybindExpanderButton,
 	esp = keybindEspButton,
 	gui = keybindGuiButton,
 	minimize = keybindMinimizeButton,
@@ -540,7 +540,7 @@ local keybindButtons = {
 }
 
 local keybindStrokes = {
-	hitbox = keybindHitboxStroke,
+	expander = keybindExpanderStroke,
 	esp = keybindEspStroke,
 	gui = keybindGuiStroke,
 	minimize = keybindMinimizeStroke,
@@ -548,14 +548,14 @@ local keybindStrokes = {
 }
 
 local keybindLabels = {
-	hitbox = keybindHitboxLabel,
+	expander = keybindExpanderLabel,
 	esp = keybindEspLabel,
 	gui = keybindGuiLabel,
 	minimize = keybindMinimizeLabel,
 	apply = keybindApplyLabel,
 }
 
-local hitboxPartNames = {
+local expanderPartNames = {
 	"HumanoidRootPart", "Head", "Torso",
 	"Left Arm", "Right Arm", "Left Leg", "Right Leg",
 	"UpperTorso", "LowerTorso",
@@ -572,7 +572,7 @@ end
 
 local function collectAndSave()
 	local data = {
-		hitboxSize = hitboxSize,
+		expanderSize = expanderSize,
 		theme = currentTheme,
 		disableTransparency = disableTransparency,
 		keybinds = {}
@@ -927,14 +927,14 @@ local function restoreOriginalData(char)
 	modifiedChars[char] = nil
 end
 
-local function forceRestoreAllHitboxes()
+local function forceRestoreAllExpanderParts()
 	for _, v in pairs(Players:GetPlayers()) do
 		if v ~= player and v.Character then
 			local char = v.Character
 			if originalData[char] then
 				restoreOriginalData(char)
 			else
-				for _, partName in pairs(hitboxPartNames) do
+				for _, partName in pairs(expanderPartNames) do
 					local part = char:FindFirstChild(partName)
 					if part and part:IsA("BasePart") then
 						local humanoidDesc = v:FindFirstChildOfClass("HumanoidDescription")
@@ -963,7 +963,7 @@ local function forceRestoreAllHitboxes()
 	end
 end
 
-local function updateHitboxes()
+local function updateExpanderParts()
 	if not isEnabled then return end
 	for _, v in pairs(Players:GetPlayers()) do
 		if v ~= player and v.Character then
@@ -977,21 +977,21 @@ local function updateHitboxes()
 			if not originalData[char] then continue end
 			modifiedChars[char] = v
 			local teamColor = getTeamColor(v)
-			for _, partName in pairs(hitboxPartNames) do
+			for _, partName in pairs(expanderPartNames) do
 				local part = char:FindFirstChild(partName)
 				if part and part:IsA("BasePart") then
 					if partName == "HumanoidRootPart" then
-						part.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
+						part.Size = Vector3.new(expanderSize, expanderSize, expanderSize)
 						part.Transparency = 1
 						part.CanCollide = false
 					elseif partName == "Head" then
-						part.Size = Vector3.new(hitboxSize * 0.8, hitboxSize * 0.8, hitboxSize * 0.8)
+						part.Size = Vector3.new(expanderSize * 0.8, expanderSize * 0.8, expanderSize * 0.8)
 						part.CanCollide = false
 						part.Color = teamColor
 						part.Material = Enum.Material.ForceField
 						part.Transparency = disableTransparency and 1 or 0.7
 					else
-						part.Size = Vector3.new(hitboxSize * 0.7, hitboxSize * 0.7, hitboxSize * 0.7)
+						part.Size = Vector3.new(expanderSize * 0.7, expanderSize * 0.7, expanderSize * 0.7)
 						part.CanCollide = false
 						part.Color = teamColor
 						part.Material = Enum.Material.ForceField
@@ -1013,7 +1013,7 @@ local function updateHitboxes()
 	end
 end
 
-local function resetHitboxes()
+local function resetExpanderParts()
 	for _, v in pairs(Players:GetPlayers()) do
 		if v ~= player and v.Character then
 			restoreOriginalData(v.Character)
@@ -1029,13 +1029,13 @@ local function resetHitboxes()
 	end
 end
 
-local function doApplyHitbox()
+local function doApplyExpander()
 	local inputValue = tonumber(textBox.Text)
 	if inputValue then
-		hitboxSize = math.max(1, inputValue)
-		textBox.Text = tostring(hitboxSize)
+		expanderSize = math.max(1, inputValue)
+		textBox.Text = tostring(expanderSize)
 		if isEnabled then
-			updateHitboxes()
+			updateExpanderParts()
 		end
 		collectAndSave()
 		animateButton(applyButton)
@@ -1072,16 +1072,16 @@ local function doMinimize()
 	end
 end
 
-local function doToggleHitbox()
+local function doToggleExpander()
 	isEnabled = not isEnabled
 	if isEnabled then
 		TweenService:Create(toggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(50, 200, 100)}):Play()
-		toggleButton.Text = "Hitbox: ON"
-		updateHitboxes()
+		toggleButton.Text = "Hitbox Expander: ON"
+		updateExpanderParts()
 	else
 		TweenService:Create(toggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(220, 50, 50)}):Play()
-		toggleButton.Text = "Hitbox: OFF"
-		resetHitboxes()
+		toggleButton.Text = "Hitbox Expander: OFF"
+		resetExpanderParts()
 	end
 end
 
@@ -1123,7 +1123,7 @@ local function setupCharacterAdded(targetPlayer)
 		if not char or not char.Parent then return end
 		if isEnabled then
 			saveOriginalData(char)
-			updateHitboxes()
+			updateExpanderParts()
 		end
 		if espEnabled then
 			createESP(targetPlayer)
@@ -1133,9 +1133,9 @@ end
 
 local function applyLoadedSettings()
 	if not savedData then return end
-	if savedData.hitboxSize then
-		hitboxSize = math.max(1, savedData.hitboxSize)
-		textBox.Text = tostring(hitboxSize)
+	if savedData.expanderSize then
+		expanderSize = math.max(1, savedData.expanderSize)
+		textBox.Text = tostring(expanderSize)
 	end
 	if savedData.disableTransparency ~= nil then
 		disableTransparency = savedData.disableTransparency
@@ -1176,7 +1176,7 @@ end
 Players.PlayerAdded:Connect(function(newPlayer)
 	setupCharacterAdded(newPlayer)
 	task.wait(1)
-	if isEnabled then updateHitboxes() end
+	if isEnabled then updateExpanderParts() end
 	if espEnabled then createESP(newPlayer) end
 end)
 
@@ -1193,12 +1193,12 @@ Players.PlayerRemoving:Connect(function(removedPlayer)
 end)
 
 applyButton.MouseButton1Click:Connect(function()
-	doApplyHitbox()
+	doApplyExpander()
 end)
 
 toggleButton.MouseButton1Click:Connect(function()
 	animateButton(toggleButton)
-	doToggleHitbox()
+	doToggleExpander()
 end)
 
 espToggleButton.MouseButton1Click:Connect(function()
@@ -1216,7 +1216,7 @@ disableTransparencyButton.MouseButton1Click:Connect(function()
 		TweenService:Create(disableTransparencyButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {BackgroundColor3 = Color3.fromRGB(220, 50, 50)}):Play()
 		disableTransparencyButton.Text = "OFF"
 	end
-	if isEnabled then updateHitboxes() end
+	if isEnabled then updateExpanderParts() end
 	collectAndSave()
 end)
 
@@ -1244,7 +1244,7 @@ yesButton.MouseButton1Click:Connect(function()
 	animateButton(yesButton)
 	isEnabled = false
 	espEnabled = false
-	forceRestoreAllHitboxes()
+	forceRestoreAllExpanderParts()
 	local playersToRemove = {}
 	for targetPlayer in pairs(espData) do
 		table.insert(playersToRemove, targetPlayer)
@@ -1332,16 +1332,16 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 		setListening(nil)
 		return
 	end
-	if keybinds.hitbox and input.KeyCode == keybinds.hitbox then doToggleHitbox() end
+	if keybinds.expander and input.KeyCode == keybinds.expander then doToggleExpander() end
 	if keybinds.esp and input.KeyCode == keybinds.esp then doToggleESP() end
 	if keybinds.gui and input.KeyCode == keybinds.gui then doToggleGui() end
 	if keybinds.minimize and input.KeyCode == keybinds.minimize then doMinimize() end
-	if keybinds.apply and input.KeyCode == keybinds.apply then doApplyHitbox() end
+	if keybinds.apply and input.KeyCode == keybinds.apply then doApplyExpander() end
 end)
 
 RunService.Heartbeat:Connect(function()
 	if isEnabled then
-		updateHitboxes()
+		updateExpanderParts()
 	end
 	updateESP()
 end)
