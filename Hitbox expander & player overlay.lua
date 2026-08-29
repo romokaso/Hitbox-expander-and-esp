@@ -695,6 +695,13 @@ local expandablePartNames = {
 	"RightUpperLeg", "RightLowerLeg", "RightFoot"
 }
 
+local function isRuntimeGuiMounted()
+	return player.Parent == Players
+		and playerGui.Parent == player
+		and screenGui.Parent == playerGui
+		and mainFrame.Parent == screenGui
+end
+
 local function getKeyName(keyCode)
 	if keyCode == nil then return "None" end
 	return keyCode.Name
@@ -725,7 +732,13 @@ end
 
 local function setListening(actionName)
 	if isShuttingDown then return end
-	if actionName ~= nil and not keybindButtons[actionName] then return end
+	if actionName ~= nil and (
+		not keybindButtons[actionName]
+		or not guiVisible
+		or not settingsFrame.Parent
+		or not settingsFrame.Visible
+		or not isRuntimeGuiMounted()
+	) then return end
 	if listeningFor then
 		updateKeybindVisual(listeningFor)
 	end
@@ -1311,7 +1324,7 @@ local function doApplyExpansion()
 end
 
 local function clampMainFrameToViewport()
-	if isShuttingDown or mainFrame.Parent ~= screenGui or screenGui.Parent ~= playerGui then return end
+	if isShuttingDown or not isRuntimeGuiMounted() then return end
 
 	local canvasPosition = screenGui.AbsolutePosition
 	local canvasSize = screenGui.AbsoluteSize
@@ -1384,9 +1397,12 @@ local function doToggleOverlay()
 end
 
 local function doToggleGui()
-	if isShuttingDown or mainFrame.Parent ~= screenGui or screenGui.Parent ~= playerGui then return end
+	if isShuttingDown or not isRuntimeGuiMounted() then return end
 	guiVisible = not guiVisible
-	if not guiVisible then cancelWindowDrag() end
+	if not guiVisible then
+		cancelWindowDrag()
+		if listeningFor then setListening(nil) end
+	end
 	mainFrame.Visible = guiVisible
 	if guiVisible then task.defer(clampMainFrameToViewport) end
 end
@@ -1438,6 +1454,7 @@ local function handleCharacterAdded(targetPlayer, character)
 end
 
 local function handleCharacterRemoving(targetPlayer, character)
+	if isShuttingDown then return end
 	restoreCharacterParts(character)
 	local data = overlayData[targetPlayer]
 	if data and data.character == character then
@@ -1451,12 +1468,13 @@ local function setupCharacterTracking(targetPlayer)
 	disconnectCharacterTracking(targetPlayer)
 	characterConnections[targetPlayer] = {
 		added = targetPlayer.CharacterAdded:Connect(function(character)
-			if targetPlayer.Parent ~= Players or targetPlayer.Character ~= character then return end
+			if isShuttingDown or targetPlayer.Parent ~= Players or targetPlayer.Character ~= character then return end
 			if trackedCharacters[targetPlayer] == character then return end
 			trackedCharacters[targetPlayer] = character
 			handleCharacterAdded(targetPlayer, character)
 		end),
 		removing = targetPlayer.CharacterRemoving:Connect(function(character)
+			if isShuttingDown then return end
 			if trackedCharacters[targetPlayer] == character then
 				trackedCharacters[targetPlayer] = nil
 			end
@@ -1624,6 +1642,11 @@ trackServiceConnection(Players.PlayerAdded:Connect(function(newPlayer)
 end))
 
 trackServiceConnection(Players.PlayerRemoving:Connect(function(removedPlayer)
+	if isShuttingDown then return end
+	if removedPlayer == player then
+		shutdownRuntime(false)
+		return
+	end
 	local character = removedPlayer.Character
 	restorePlayerParts(removedPlayer)
 	removePlayerOverlay(removedPlayer)
@@ -1636,6 +1659,10 @@ trackServiceConnection(screenGui:GetPropertyChangedSignal("AbsoluteSize"):Connec
 trackServiceConnection(workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
 	if not isShuttingDown then refreshViewportTracking() end
 end))
+local windowFocusReleased = UserInputService.WindowFocusReleased
+if windowFocusReleased then
+	trackServiceConnection(windowFocusReleased:Connect(cancelWindowDrag))
+end
 refreshViewportTracking()
 
 applyExpansionButton.MouseButton1Click:Connect(function()
@@ -1733,8 +1760,9 @@ backButton.MouseButton1Click:Connect(function()
 	if listeningFor then setListening(nil) end
 	TweenService:Create(settingsFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(1, 0, 0, 0)}):Play()
 	task.wait(0.2)
-	if not isShuttingDown and settingsFrame.Parent then
-		settingsFrame.Visible = false
+	if not isShuttingDown then
+		if listeningFor then setListening(nil) end
+		if settingsFrame.Parent then settingsFrame.Visible = false end
 	end
 end)
 
@@ -1757,7 +1785,11 @@ footerLabelMinimized.MouseButton1Click:Connect(function()
 end)
 
 trackServiceConnection(UserInputService.InputBegan:Connect(function(input, gameProcessed)
-	if isShuttingDown or input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+	if isShuttingDown or input.UserInputType ~= Enum.UserInputType.Keyboard or not isRuntimeGuiMounted() then return end
+	if listeningFor and (not guiVisible or not settingsFrame.Parent or not settingsFrame.Visible) then
+		setListening(nil)
+		return
+	end
 	if listeningFor then
 		if input.KeyCode == Enum.KeyCode.Escape then
 			setListening(nil)
@@ -1789,7 +1821,7 @@ end))
 
 trackServiceConnection(RunService.Heartbeat:Connect(function(deltaTime)
 	if isShuttingDown then return end
-	if screenGui.Parent ~= playerGui or mainFrame.Parent ~= screenGui then
+	if not isRuntimeGuiMounted() then
 		shutdownRuntime(false)
 		return
 	end
@@ -1816,7 +1848,7 @@ trackServiceConnection(RunService.Heartbeat:Connect(function(deltaTime)
 end))
 
 local function beginWindowDrag(input)
-	if isShuttingDown or not guiVisible or isDragging then return end
+	if isShuttingDown or not guiVisible or isDragging or not isRuntimeGuiMounted() then return end
 	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 		isDragging = true
 		dragPointerInput = input
@@ -1838,6 +1870,10 @@ settingsTitleLabel.InputBegan:Connect(beginWindowDrag)
 
 trackServiceConnection(UserInputService.InputChanged:Connect(function(input)
 	if isShuttingDown or not guiVisible or not isDragging or not dragPointerInput then return end
+	if not isRuntimeGuiMounted() then
+		cancelWindowDrag()
+		return
+	end
 	local isTouchMovement = dragPointerInput.UserInputType == Enum.UserInputType.Touch and input == dragPointerInput
 	local isMouseMovement = dragPointerInput.UserInputType == Enum.UserInputType.MouseButton1
 		and input.UserInputType == Enum.UserInputType.MouseMovement
