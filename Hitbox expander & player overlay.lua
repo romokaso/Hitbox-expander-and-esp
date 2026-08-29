@@ -87,11 +87,13 @@ local function readSettingsFile(fileName)
 		end
 	end
 
-	local ok, result = pcall(function()
-		return HttpService:JSONDecode(readfile(fileName))
+	local readOk, contents = pcall(readfile, fileName)
+	if not readOk then return nil, confirmedExistingFile end
+	local decodeOk, result = pcall(function()
+		return HttpService:JSONDecode(contents)
 	end)
-	if ok and type(result) == "table" then return result, false end
-	return nil, confirmedExistingFile
+	if decodeOk and type(result) == "table" then return result, false end
+	return nil, true
 end
 
 local function loadSettings()
@@ -619,7 +621,7 @@ local isMinimized = false
 local currentTheme = "dark"
 local guiVisible = true
 local isDragging = false
-local dragInput = nil
+local dragPointerInput = nil
 local dragStart = nil
 local startPos = nil
 local dragEndConnection = nil
@@ -939,7 +941,7 @@ local function createPlayerOverlay(targetPlayer)
 	removeManagedOverlayInstances(targetPlayer, character)
 	local teamColor = getTeamColor(targetPlayer)
 	local displayName = tostring(targetPlayer.DisplayName or targetPlayer.Name)
-	local hasDisplayName = string.lower(displayName) ~= string.lower(targetPlayer.Name)
+	local hasDisplayName = displayName ~= targetPlayer.Name
 	local guiHeight = hasDisplayName and 36 or 20
 
 	local billboardGui = Instance.new("BillboardGui")
@@ -1046,7 +1048,7 @@ local function updatePlayerOverlays()
 			else
 				local data = overlayData[targetPlayer]
 				local currentDisplayName = tostring(targetPlayer.DisplayName or targetPlayer.Name)
-				local currentlyHasDisplayName = string.lower(currentDisplayName) ~= string.lower(targetPlayer.Name)
+				local currentlyHasDisplayName = currentDisplayName ~= targetPlayer.Name
 				local expectedBillboardName = "PlayerOverlayBillboard_" .. targetPlayer.Name
 				local expectedHighlightName = "PlayerOverlayHighlight_" .. targetPlayer.Name
 				local needsRecreate = not data
@@ -1103,7 +1105,7 @@ local function updatePlayerOverlays()
 	end
 end
 
-local function saveOriginalPartSnapshot(targetPlayer, character, part)
+local function saveOriginalPartSnapshot(targetPlayer, character, part, partName)
 	local existingSnapshot = originalPartData[part]
 	if existingSnapshot then return existingSnapshot end
 
@@ -1111,6 +1113,7 @@ local function saveOriginalPartSnapshot(targetPlayer, character, part)
 		return {
 			player = targetPlayer,
 			character = character,
+			partName = partName,
 			properties = {
 				Size = part.Size,
 				Transparency = part.Transparency,
@@ -1176,11 +1179,15 @@ end
 
 local function applyExpansionToPart(targetPlayer, character, part, partName, teamColor, targetSize)
 	local existingSnapshot = originalPartData[part]
-	if existingSnapshot and (existingSnapshot.player ~= targetPlayer or existingSnapshot.character ~= character) then
+	if existingSnapshot and (
+		existingSnapshot.player ~= targetPlayer
+		or existingSnapshot.character ~= character
+		or existingSnapshot.partName ~= partName
+	) then
 		restoreOriginalPart(part, existingSnapshot)
 	end
 
-	local snapshot = saveOriginalPartSnapshot(targetPlayer, character, part)
+	local snapshot = saveOriginalPartSnapshot(targetPlayer, character, part, partName)
 	if not snapshot then return end
 	local modifiedProperties = snapshot.modifiedProperties
 
@@ -1257,6 +1264,24 @@ local function resetExpandedParts()
 	forceRestoreAllExpandedParts()
 end
 
+local function disconnectConnection(connection)
+	if connection then
+		pcall(function()
+			connection:Disconnect()
+		end)
+	end
+end
+
+local function cancelWindowDrag()
+	isDragging = false
+	dragPointerInput = nil
+	dragStart = nil
+	startPos = nil
+	local activeDragEndConnection = dragEndConnection
+	dragEndConnection = nil
+	disconnectConnection(activeDragEndConnection)
+end
+
 local function doApplyExpansion()
 	if isShuttingDown then return end
 	local inputValue = normalizeExpansionSize(expansionSizeInput.Text)
@@ -1312,6 +1337,7 @@ end
 
 local function doMinimize()
 	if isShuttingDown or confirmFrame.Visible or settingsFrame.Visible then return end
+	cancelWindowDrag()
 	isMinimized = not isMinimized
 	if isMinimized then
 		TweenService:Create(mainFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 260, 0, 60)}):Play()
@@ -1360,16 +1386,9 @@ end
 local function doToggleGui()
 	if isShuttingDown or mainFrame.Parent ~= screenGui or screenGui.Parent ~= playerGui then return end
 	guiVisible = not guiVisible
+	if not guiVisible then cancelWindowDrag() end
 	mainFrame.Visible = guiVisible
 	if guiVisible then task.defer(clampMainFrameToViewport) end
-end
-
-local function disconnectConnection(connection)
-	if connection then
-		pcall(function()
-			connection:Disconnect()
-		end)
-	end
 end
 
 local function trackServiceConnection(connection)
@@ -1410,7 +1429,7 @@ local function disconnectCharacterTracking(targetPlayer)
 end
 
 local function handleCharacterAdded(targetPlayer, character)
-	if isShuttingDown or not character then return end
+	if isShuttingDown or not character or targetPlayer.Parent ~= Players or targetPlayer.Character ~= character then return end
 	restorePlayerParts(targetPlayer)
 	removePlayerOverlay(targetPlayer)
 	removeManagedOverlayInstances(targetPlayer, character)
@@ -1428,10 +1447,11 @@ local function handleCharacterRemoving(targetPlayer, character)
 end
 
 local function setupCharacterTracking(targetPlayer)
-	if isShuttingDown or not targetPlayer or targetPlayer == player then return end
+	if isShuttingDown or not targetPlayer or targetPlayer == player or targetPlayer.Parent ~= Players then return end
 	disconnectCharacterTracking(targetPlayer)
 	characterConnections[targetPlayer] = {
 		added = targetPlayer.CharacterAdded:Connect(function(character)
+			if targetPlayer.Parent ~= Players or targetPlayer.Character ~= character then return end
 			if trackedCharacters[targetPlayer] == character then return end
 			trackedCharacters[targetPlayer] = character
 			handleCharacterAdded(targetPlayer, character)
@@ -1445,7 +1465,7 @@ local function setupCharacterTracking(targetPlayer)
 	}
 
 	local currentCharacter = targetPlayer.Character
-	if currentCharacter then
+	if currentCharacter and trackedCharacters[targetPlayer] ~= currentCharacter then
 		trackedCharacters[targetPlayer] = currentCharacter
 		handleCharacterAdded(targetPlayer, currentCharacter)
 	end
@@ -1526,13 +1546,8 @@ local function shutdownRuntime(animateClose, guiAlreadyDestroying)
 	isShuttingDown = true
 	expanderEnabled = false
 	overlayEnabled = false
-	isDragging = false
-	dragInput = nil
-	dragStart = nil
-	startPos = nil
+	cancelWindowDrag()
 	listeningFor = nil
-	disconnectConnection(dragEndConnection)
-	dragEndConnection = nil
 	disconnectConnection(viewportSizeConnection)
 	viewportSizeConnection = nil
 
@@ -1665,6 +1680,7 @@ end)
 
 closeButton.MouseButton1Click:Connect(function()
 	if isShuttingDown or confirmFrame.Visible or settingsFrame.Visible then return end
+	cancelWindowDrag()
 	animateButton(closeButton)
 	if isMinimized then
 		isMinimized = false
@@ -1695,6 +1711,7 @@ end)
 
 settingsButtonTop.MouseButton1Click:Connect(function()
 	if isShuttingDown or confirmFrame.Visible or settingsFrame.Visible then return end
+	cancelWindowDrag()
 	animateButton(settingsButtonTop)
 	if isMinimized then
 		isMinimized = false
@@ -1711,6 +1728,7 @@ end)
 
 backButton.MouseButton1Click:Connect(function()
 	if isShuttingDown then return end
+	cancelWindowDrag()
 	animateButton(backButton)
 	if listeningFor then setListening(nil) end
 	TweenService:Create(settingsFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(1, 0, 0, 0)}):Play()
@@ -1754,7 +1772,7 @@ trackServiceConnection(UserInputService.InputBegan:Connect(function(input, gameP
 		end
 		return
 	end
-	if gameProcessed then return end
+	if gameProcessed or UserInputService:GetFocusedTextBox() then return end
 
 	if keybinds.expander and input.KeyCode == keybinds.expander then
 		doToggleExpander()
@@ -1798,50 +1816,42 @@ trackServiceConnection(RunService.Heartbeat:Connect(function(deltaTime)
 end))
 
 local function beginWindowDrag(input)
-	if isShuttingDown or not guiVisible then return end
+	if isShuttingDown or not guiVisible or isDragging then return end
 	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 		isDragging = true
+		dragPointerInput = input
 		dragStart = input.Position
 		startPos = mainFrame.Position
 		disconnectConnection(dragEndConnection)
 		dragEndConnection = input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				isDragging = false
-				dragInput = nil
-				dragStart = nil
-				startPos = nil
-				disconnectConnection(dragEndConnection)
-				dragEndConnection = nil
+			local inputState = input.UserInputState
+			if (inputState == Enum.UserInputState.End or inputState == Enum.UserInputState.Cancel)
+				and dragPointerInput == input then
+				cancelWindowDrag()
 			end
 		end)
 	end
 end
 
-local function captureWindowDragInput(input)
-	if isShuttingDown or not guiVisible then return end
-	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-		dragInput = input
-	end
-end
-
 titleLabel.InputBegan:Connect(beginWindowDrag)
-titleLabel.InputChanged:Connect(captureWindowDragInput)
 settingsTitleLabel.InputBegan:Connect(beginWindowDrag)
-settingsTitleLabel.InputChanged:Connect(captureWindowDragInput)
 
 trackServiceConnection(UserInputService.InputChanged:Connect(function(input)
-	if isShuttingDown or not guiVisible then return end
-	if input == dragInput and isDragging then
-		local delta = input.Position - dragStart
-		local proposedPosition = UDim2.new(
-			startPos.X.Scale,
-			startPos.X.Offset + delta.X,
-			startPos.Y.Scale,
-			startPos.Y.Offset + delta.Y
-		)
-		mainFrame.Position = proposedPosition
-		clampMainFrameToViewport()
-	end
+	if isShuttingDown or not guiVisible or not isDragging or not dragPointerInput then return end
+	local isTouchMovement = dragPointerInput.UserInputType == Enum.UserInputType.Touch and input == dragPointerInput
+	local isMouseMovement = dragPointerInput.UserInputType == Enum.UserInputType.MouseButton1
+		and input.UserInputType == Enum.UserInputType.MouseMovement
+	if not isTouchMovement and not isMouseMovement then return end
+
+	local delta = input.Position - dragStart
+	local proposedPosition = UDim2.new(
+		startPos.X.Scale,
+		startPos.X.Offset + delta.X,
+		startPos.Y.Scale,
+		startPos.Y.Offset + delta.Y
+	)
+	mainFrame.Position = proposedPosition
+	clampMainFrameToViewport()
 end))
 
 applyExpansionButton.MouseEnter:Connect(function()
