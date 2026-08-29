@@ -366,7 +366,7 @@ settingsContentFrame.BorderSizePixel = 0
 settingsContentFrame.ZIndex = 11
 settingsContentFrame.ScrollBarThickness = 3
 settingsContentFrame.ScrollBarImageColor3 = Color3.fromRGB(80, 150, 255)
-settingsContentFrame.CanvasSize = UDim2.new(0, 0, 0, 350)
+settingsContentFrame.CanvasSize = UDim2.new(0, 0, 0, 1060)
 settingsContentFrame.Parent = settingsFrame
 
 local themeLabel = Instance.new("TextLabel")
@@ -565,6 +565,150 @@ local expanderPartNames = {
 	"RightUpperLeg", "RightLowerLeg", "RightFoot"
 }
 
+local partSettings = {}
+for _, partName in ipairs(expanderPartNames) do
+	partSettings[partName] = {enabled = true, mult = 1}
+end
+local partEnabledButtons = {}
+local partMultBoxes = {}
+local partMultStrokes = {}
+local partRowLabels = {}
+
+local partSettingsLabel = Instance.new("TextLabel")
+partSettingsLabel.Size = UDim2.new(1, -24, 0, 22)
+partSettingsLabel.Position = UDim2.new(0, 12, 0, 322)
+partSettingsLabel.BackgroundTransparency = 1
+partSettingsLabel.Text = "Body Parts:"
+partSettingsLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
+partSettingsLabel.TextSize = 13
+partSettingsLabel.Font = Enum.Font.GothamBold
+partSettingsLabel.TextXAlignment = Enum.TextXAlignment.Left
+partSettingsLabel.ZIndex = 11
+partSettingsLabel.Parent = settingsContentFrame
+
+local partSettingsHint = Instance.new("TextLabel")
+partSettingsHint.Size = UDim2.new(1, -24, 0, 14)
+partSettingsHint.Position = UDim2.new(0, 12, 0, 344)
+partSettingsHint.BackgroundTransparency = 1
+partSettingsHint.Text = "Toggle a part or set its size multiplier (0.1 - 20, Enter to apply)"
+partSettingsHint.TextColor3 = Color3.fromRGB(120, 120, 130)
+partSettingsHint.TextSize = 10
+partSettingsHint.Font = Enum.Font.Gotham
+partSettingsHint.TextXAlignment = Enum.TextXAlignment.Left
+partSettingsHint.ZIndex = 11
+partSettingsHint.Parent = settingsContentFrame
+
+local function makePartSettingRow(partName, yPos)
+	local rowLabel = Instance.new("TextLabel")
+	rowLabel.Size = UDim2.new(0, 130, 0, 28)
+	rowLabel.Position = UDim2.new(0, 12, 0, yPos)
+	rowLabel.BackgroundTransparency = 1
+	rowLabel.Text = partName
+	rowLabel.TextColor3 = Color3.fromRGB(180, 180, 190)
+	rowLabel.TextSize = 12
+	rowLabel.Font = Enum.Font.Gotham
+	rowLabel.TextXAlignment = Enum.TextXAlignment.Left
+	rowLabel.ZIndex = 11
+	rowLabel.Parent = settingsContentFrame
+
+	local rowButton = Instance.new("TextButton")
+	rowButton.Size = UDim2.new(0, 52, 0, 28)
+	rowButton.Position = UDim2.new(0, 144, 0, yPos)
+	rowButton.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
+	rowButton.BorderSizePixel = 0
+	rowButton.Text = "ON"
+	rowButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	rowButton.TextSize = 12
+	rowButton.Font = Enum.Font.GothamBold
+	rowButton.ZIndex = 11
+	rowButton.Parent = settingsContentFrame
+
+	local rowCorner = Instance.new("UICorner")
+	rowCorner.CornerRadius = UDim.new(0, 7)
+	rowCorner.Parent = rowButton
+
+	local rowBox = Instance.new("TextBox")
+	rowBox.Size = UDim2.new(0, 56, 0, 28)
+	rowBox.Position = UDim2.new(0, 200, 0, yPos)
+	rowBox.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+	rowBox.BorderSizePixel = 0
+	rowBox.Text = "1"
+	rowBox.PlaceholderText = "x"
+	rowBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	rowBox.TextSize = 12
+	rowBox.Font = Enum.Font.Gotham
+	rowBox.ZIndex = 11
+	rowBox.Parent = settingsContentFrame
+
+	local boxCorner = Instance.new("UICorner")
+	boxCorner.CornerRadius = UDim.new(0, 7)
+	boxCorner.Parent = rowBox
+
+	local boxStroke = Instance.new("UIStroke")
+	boxStroke.Color = Color3.fromRGB(80, 80, 100)
+	boxStroke.Thickness = 1
+	boxStroke.ZIndex = 11
+	boxStroke.Parent = rowBox
+
+	return rowLabel, rowButton, rowBox, boxStroke
+end
+
+local function colorPartEnabledButton(btn, on)
+	if on then
+		btn.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
+		btn.Text = "ON"
+	else
+		btn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+		btn.Text = "OFF"
+	end
+end
+
+local function applyPartMultiplier(partName, box)
+	local value = tonumber(box.Text)
+	if value then
+		partSettings[partName].mult = math.clamp(value, 0.1, 20)
+		box.Text = string.format("%g", partSettings[partName].mult)
+		if isEnabled then updateExpanderParts() end
+		collectAndSave()
+		return true
+	end
+	TweenService:Create(partMultStrokes[partName], TweenInfo.new(0.08), {Color = Color3.fromRGB(220, 50, 50)}):Play()
+	task.delay(0.4, function()
+		if partMultStrokes[partName] and partMultStrokes[partName].Parent then
+			local col = currentTheme == "light" and Color3.fromRGB(200, 200, 210) or Color3.fromRGB(80, 80, 100)
+			TweenService:Create(partMultStrokes[partName], TweenInfo.new(0.1), {Color = col}):Play()
+		end
+	end)
+	return false
+end
+
+local partRowY = 362
+for _, partName in ipairs(expanderPartNames) do
+	local rowLabel, rowButton, rowBox, boxStroke = makePartSettingRow(partName, partRowY)
+	partRowLabels[partName] = rowLabel
+	partEnabledButtons[partName] = rowButton
+	partMultBoxes[partName] = rowBox
+	partMultStrokes[partName] = boxStroke
+	rowButton.MouseButton1Click:Connect(function()
+		animateButton(rowButton)
+		partSettings[partName].enabled = not partSettings[partName].enabled
+		colorPartEnabledButton(rowButton, partSettings[partName].enabled)
+		if not partSettings[partName].enabled then
+			restorePartForAll(partName)
+		end
+		if isEnabled then updateExpanderParts() end
+		collectAndSave()
+	end)
+	rowBox.FocusLost:Connect(function(enterPressed)
+		if enterPressed then
+			applyPartMultiplier(partName, rowBox)
+		else
+			rowBox.Text = string.format("%g", partSettings[partName].mult)
+		end
+	end)
+	partRowY = partRowY + 32
+end
+
 local function getKeyName(keyCode)
 	if keyCode == nil then return "None" end
 	return keyCode.Name
@@ -575,10 +719,14 @@ local function collectAndSave()
 		expanderSize = expanderSize,
 		theme = currentTheme,
 		disableTransparency = disableTransparency,
-		keybinds = {}
+		keybinds = {},
+		partSettings = {}
 	}
 	for action, kc in pairs(keybinds) do
 		data.keybinds[action] = kc ~= nil and kc.Name or "None"
+	end
+	for partName, cfg in pairs(partSettings) do
+		data.partSettings[partName] = {enabled = cfg.enabled, mult = cfg.mult}
 	end
 	saveSettings(data)
 end
@@ -691,6 +839,14 @@ local function applyTheme(theme)
 		for _, lbl in pairs(keybindLabels) do
 			TweenService:Create(lbl, tweenInfo, {TextColor3 = Color3.fromRGB(80, 80, 90)}):Play()
 		end
+		TweenService:Create(partSettingsLabel, tweenInfo, {TextColor3 = Color3.fromRGB(60, 60, 70)}):Play()
+		TweenService:Create(partSettingsHint, tweenInfo, {TextColor3 = Color3.fromRGB(100, 100, 110)}):Play()
+		for partName, _ in pairs(partSettings) do
+			TweenService:Create(partRowLabels[partName], tweenInfo, {TextColor3 = Color3.fromRGB(80, 80, 90)}):Play()
+			TweenService:Create(partEnabledButtons[partName], tweenInfo, {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+			TweenService:Create(partMultBoxes[partName], tweenInfo, {BackgroundColor3 = Color3.fromRGB(235, 235, 245), TextColor3 = Color3.fromRGB(30, 30, 40)}):Play()
+			TweenService:Create(partMultStrokes[partName], tweenInfo, {Color = Color3.fromRGB(200, 200, 210)}):Play()
+		end
 		local lightStroke = lightButton:FindFirstChild("UIStroke")
 		if not lightStroke then
 			lightStroke = Instance.new("UIStroke")
@@ -725,6 +881,14 @@ local function applyTheme(theme)
 		TweenService:Create(settingsButtonTop, tweenInfo, {BackgroundColor3 = Color3.fromRGB(100, 100, 120), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 		for _, lbl in pairs(keybindLabels) do
 			TweenService:Create(lbl, tweenInfo, {TextColor3 = Color3.fromRGB(180, 180, 190)}):Play()
+		end
+		TweenService:Create(partSettingsLabel, tweenInfo, {TextColor3 = Color3.fromRGB(200, 200, 210)}):Play()
+		TweenService:Create(partSettingsHint, tweenInfo, {TextColor3 = Color3.fromRGB(120, 120, 130)}):Play()
+		for partName, _ in pairs(partSettings) do
+			TweenService:Create(partRowLabels[partName], tweenInfo, {TextColor3 = Color3.fromRGB(180, 180, 190)}):Play()
+			TweenService:Create(partEnabledButtons[partName], tweenInfo, {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+			TweenService:Create(partMultBoxes[partName], tweenInfo, {BackgroundColor3 = Color3.fromRGB(40, 40, 50), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+			TweenService:Create(partMultStrokes[partName], tweenInfo, {Color = Color3.fromRGB(80, 80, 100)}):Play()
 		end
 		local lightStroke = lightButton:FindFirstChild("UIStroke")
 		if lightStroke then
@@ -927,6 +1091,25 @@ local function restoreOriginalData(char)
 	modifiedChars[char] = nil
 end
 
+local function restorePartForAll(partName)
+	for _, v in pairs(Players:GetPlayers()) do
+		if v ~= player and v.Character and v.Character.Parent then
+			local char = v.Character
+			if originalData[char] then
+				restoreOriginalData(char)
+			else
+				local part = char:FindFirstChild(partName)
+				if part and part:IsA("BasePart") then
+					part.CanCollide = false
+					if partName == "HumanoidRootPart" then
+						part.Transparency = 1
+					end
+				end
+			end
+		end
+	end
+end
+
 local function forceRestoreAllExpanderParts()
 	for _, v in pairs(Players:GetPlayers()) do
 		if v ~= player and v.Character then
@@ -935,12 +1118,14 @@ local function forceRestoreAllExpanderParts()
 				restoreOriginalData(char)
 			else
 				for _, partName in pairs(expanderPartNames) do
-					local part = char:FindFirstChild(partName)
-					if part and part:IsA("BasePart") then
-						local humanoidDesc = v:FindFirstChildOfClass("HumanoidDescription")
-						part.CanCollide = false
-						if partName == "HumanoidRootPart" then
-							part.Transparency = 1
+					local partCfg = partSettings[partName]
+					if partCfg and partCfg.enabled then
+						local part = char:FindFirstChild(partName)
+						if part and part:IsA("BasePart") then
+							part.CanCollide = false
+							if partName == "HumanoidRootPart" then
+								part.Transparency = 1
+							end
 						end
 					end
 				end
@@ -978,24 +1163,27 @@ local function updateExpanderParts()
 			modifiedChars[char] = v
 			local teamColor = getTeamColor(v)
 			for _, partName in pairs(expanderPartNames) do
-				local part = char:FindFirstChild(partName)
-				if part and part:IsA("BasePart") then
-					if partName == "HumanoidRootPart" then
-						part.Size = Vector3.new(expanderSize, expanderSize, expanderSize)
-						part.Transparency = 1
-						part.CanCollide = false
-					elseif partName == "Head" then
-						part.Size = Vector3.new(expanderSize * 0.8, expanderSize * 0.8, expanderSize * 0.8)
-						part.CanCollide = false
-						part.Color = teamColor
-						part.Material = Enum.Material.ForceField
-						part.Transparency = disableTransparency and 1 or 0.7
-					else
-						part.Size = Vector3.new(expanderSize * 0.7, expanderSize * 0.7, expanderSize * 0.7)
-						part.CanCollide = false
-						part.Color = teamColor
-						part.Material = Enum.Material.ForceField
-						part.Transparency = disableTransparency and 1 or 0.7
+				local partCfg = partSettings[partName]
+				if partCfg and partCfg.enabled then
+					local part = char:FindFirstChild(partName)
+					if part and part:IsA("BasePart") then
+						if partName == "HumanoidRootPart" then
+							part.Size = Vector3.new(expanderSize * partCfg.mult, expanderSize * partCfg.mult, expanderSize * partCfg.mult)
+							part.Transparency = 1
+							part.CanCollide = false
+						elseif partName == "Head" then
+							part.Size = Vector3.new(expanderSize * 0.8 * partCfg.mult, expanderSize * 0.8 * partCfg.mult, expanderSize * 0.8 * partCfg.mult)
+							part.CanCollide = false
+							part.Color = teamColor
+							part.Material = Enum.Material.ForceField
+							part.Transparency = disableTransparency and 1 or 0.7
+						else
+							part.Size = Vector3.new(expanderSize * 0.7 * partCfg.mult, expanderSize * 0.7 * partCfg.mult, expanderSize * 0.7 * partCfg.mult)
+							part.CanCollide = false
+							part.Color = teamColor
+							part.Material = Enum.Material.ForceField
+							part.Transparency = disableTransparency and 1 or 0.7
+						end
 					end
 				end
 			end
@@ -1158,6 +1346,24 @@ local function applyLoadedSettings()
 					if keybindButtons[action] then
 						keybindButtons[action].Text = keyName
 					end
+				end
+			end
+		end
+	end
+	if savedData.partSettings then
+		for partName, cfg in pairs(savedData.partSettings) do
+			if partSettings[partName] and type(cfg) == "table" then
+				if cfg.enabled ~= nil then
+					partSettings[partName].enabled = cfg.enabled
+				end
+				if type(cfg.mult) == "number" then
+					partSettings[partName].mult = math.clamp(cfg.mult, 0.1, 20)
+				end
+				if partEnabledButtons[partName] then
+					colorPartEnabledButton(partEnabledButtons[partName], partSettings[partName].enabled)
+				end
+				if partMultBoxes[partName] then
+					partMultBoxes[partName].Text = string.format("%g", partSettings[partName].mult)
 				end
 			end
 		end

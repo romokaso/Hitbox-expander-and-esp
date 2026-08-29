@@ -64,6 +64,7 @@
 ### ⚙️ Settings
 - **5 customizable keybinds** (see [Keybinds](#️-keybinds))
 - "Disable Transparency" option — controls hitbox part transparency
+- **Body Parts section**: toggle each body part on/off and set a custom size multiplier (0.1–20) per part
 - Theme switcher
 - **Autosave**: all settings are written to a file and restored on the next launch
 
@@ -131,6 +132,7 @@ By default, no keys are bound (`None`) — set them up as you like.
 | **Disable Transparency** | ON / OFF | `OFF` | `ON` — hitbox parts are completely invisible; `OFF` — semi-transparent (30% visible) |
 | **Keybinds** | 5 actions | `None` | Hotkeys (see [Keybinds](#️-keybinds)) |
 | **Expander Size** | ≥ 1 | `10` | Hitbox size |
+| **Body Parts** | 21 toggles + multipliers | all `ON`, `1` | Enable/disable each part and set its custom size multiplier (0.1–20) |
 
 All settings are applied instantly and **saved automatically**.
 
@@ -147,7 +149,7 @@ All settings are applied instantly and **saved automatically**.
 ## 💾 Autosave
 
 - Settings file: `hitbox_expander_settings.json` (in your executor's workspace folder)
-- Saved values: hitbox size, theme, "Disable Transparency" and all keybinds
+- Saved values: hitbox size, theme, "Disable Transparency", all keybinds and per-part body settings
 - Settings are restored every time the script runs
 - **Resetting settings:** simply delete the `hitbox_expander_settings.json` file
 
@@ -187,6 +189,7 @@ Hitbox-expander-esp/
 
 ## 🛠️ Recent Changes
 
+- 🧬 Per-part body settings: toggle each body part and set a custom size multiplier (0.1–20) per part, saved automatically
 - 🔄 Full rebranding: **Hitbox changer** → **Hitbox Expander** (file, GUI, settings, internal code)
 - 💾 Settings save/load system with file autosave
 - ⌨️ 5 customizable keybinds + UI for assigning them
