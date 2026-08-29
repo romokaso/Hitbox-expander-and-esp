@@ -27,7 +27,6 @@
 - [❓ FAQ](#-faq)
 - [📁 Repository Structure](#-repository-structure)
 - [🛠️ Recent Changes](#️-recent-changes)
-- [⚠️ Disclaimer](#️-disclaimer)
 
 ---
 
@@ -197,12 +196,6 @@ Hitbox-expander-esp/
 - 🎨 Visual feedback for invalid input
 - 🛡️ Preservation of additional part properties (`CastShadow` and more)
 - 🐞 Fixed cleanup when disabling features
-
----
-
-## ⚠️ Disclaimer
-
-This script is provided **for educational purposes only**. Using exploits violates Roblox's Terms of Use and may lead to an account ban. Use it **at your own risk** — the author is not responsible for any possible consequences. This project is not affiliated with Roblox Corporation.
 
 ---
 
