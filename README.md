@@ -4,8 +4,10 @@
 
 ## Features
 
-- Configurable hitbox expansion
-- Player overlay with names, distance, health, and team-colored highlights
+- Configurable hitbox expansion for every standard R6/R15 body part
+- Independent per-part enable switches and optional absolute size overrides; blank overrides follow the global size and role coefficient, while global Apply preserves explicit overrides
+- Mutually exclusive All, Players (default), and NPC targeting for both expansion and overlay
+- Player/NPC overlay with names, distance, health, and player team-colored highlights
 - Clean animated interface
 - Dark and light themes
 - Minimizable window and settings panel

@@ -23,6 +23,12 @@ local MIN_EXPANSION_SIZE = 1
 local MAX_EXPANSION_SIZE = 100
 local EXPANSION_UPDATE_INTERVAL = 1 / 30
 local OVERLAY_UPDATE_INTERVAL = 0.1
+local DEFAULT_TARGET_MODE = "players"
+local VALID_TARGET_MODES = {
+	all = true,
+	players = true,
+	npcs = true,
+}
 
 local runtimeEnvironment = _G
 if type(getgenv) == "function" then
@@ -123,6 +129,12 @@ if type(savedData) == "table" then
 		))
 end
 
+local function addCorner(parent, radius)
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = radius
+	corner.Parent = parent
+end
+
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = GUI_NAME
 screenGui.ResetOnSpawn = false
@@ -138,9 +150,7 @@ mainFrame.Active = true
 mainFrame.ClipsDescendants = true
 mainFrame.Parent = screenGui
 
-local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, 12)
-mainCorner.Parent = mainFrame
+addCorner(mainFrame, UDim.new(0, 12))
 
 local mainStroke = Instance.new("UIStroke")
 mainStroke.Color = Color3.fromRGB(60, 60, 70)
@@ -155,9 +165,7 @@ titleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 titleBar.BorderSizePixel = 0
 titleBar.Parent = mainFrame
 
-local titleCorner = Instance.new("UICorner")
-titleCorner.CornerRadius = UDim.new(0, 12)
-titleCorner.Parent = titleBar
+addCorner(titleBar, UDim.new(0, 12))
 
 local titleFix = Instance.new("Frame")
 titleFix.Size = UDim2.new(1, 0, 0, 12)
@@ -196,9 +204,7 @@ settingsButtonTop.TextSize = 14
 settingsButtonTop.Font = Enum.Font.GothamBold
 settingsButtonTop.Parent = titleBar
 
-local settingsTopCorner = Instance.new("UICorner")
-settingsTopCorner.CornerRadius = UDim.new(0, 6)
-settingsTopCorner.Parent = settingsButtonTop
+addCorner(settingsButtonTop, UDim.new(0, 6))
 
 local minimizeButton = Instance.new("TextButton")
 minimizeButton.Name = "MinimizeButton"
@@ -212,9 +218,7 @@ minimizeButton.TextSize = 14
 minimizeButton.Font = Enum.Font.GothamBold
 minimizeButton.Parent = titleBar
 
-local minimizeCorner = Instance.new("UICorner")
-minimizeCorner.CornerRadius = UDim.new(0, 6)
-minimizeCorner.Parent = minimizeButton
+addCorner(minimizeButton, UDim.new(0, 6))
 
 local closeButton = Instance.new("TextButton")
 closeButton.Name = "CloseButton"
@@ -228,9 +232,7 @@ closeButton.TextSize = 13
 closeButton.Font = Enum.Font.GothamBold
 closeButton.Parent = titleBar
 
-local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(0, 6)
-closeCorner.Parent = closeButton
+addCorner(closeButton, UDim.new(0, 6))
 
 local contentFrame = Instance.new("Frame")
 contentFrame.Name = "ContentFrame"
@@ -263,9 +265,7 @@ expansionSizeInput.TextSize = 12
 expansionSizeInput.Font = Enum.Font.Gotham
 expansionSizeInput.Parent = contentFrame
 
-local expansionSizeInputCorner = Instance.new("UICorner")
-expansionSizeInputCorner.CornerRadius = UDim.new(0, 7)
-expansionSizeInputCorner.Parent = expansionSizeInput
+addCorner(expansionSizeInput, UDim.new(0, 7))
 
 local expansionSizeInputStroke = Instance.new("UIStroke")
 expansionSizeInputStroke.Color = Color3.fromRGB(80, 80, 90)
@@ -283,9 +283,7 @@ applyExpansionButton.TextSize = 12
 applyExpansionButton.Font = Enum.Font.GothamBold
 applyExpansionButton.Parent = contentFrame
 
-local applyExpansionCorner = Instance.new("UICorner")
-applyExpansionCorner.CornerRadius = UDim.new(0, 7)
-applyExpansionCorner.Parent = applyExpansionButton
+addCorner(applyExpansionButton, UDim.new(0, 7))
 
 local expanderToggleButton = Instance.new("TextButton")
 expanderToggleButton.Size = UDim2.new(0, 236, 0, 32)
@@ -298,12 +296,10 @@ expanderToggleButton.TextSize = 13
 expanderToggleButton.Font = Enum.Font.GothamBold
 expanderToggleButton.Parent = contentFrame
 
-local expanderToggleCorner = Instance.new("UICorner")
-expanderToggleCorner.CornerRadius = UDim.new(0, 7)
-expanderToggleCorner.Parent = expanderToggleButton
+addCorner(expanderToggleButton, UDim.new(0, 7))
 
 local overlayToggleButton = Instance.new("TextButton")
-overlayToggleButton.Size = UDim2.new(0, 236, 0, 32)
+overlayToggleButton.Size = UDim2.new(0, 198, 0, 32)
 overlayToggleButton.Position = UDim2.new(0, 12, 0, 80)
 overlayToggleButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
 overlayToggleButton.BorderSizePixel = 0
@@ -313,9 +309,21 @@ overlayToggleButton.TextSize = 13
 overlayToggleButton.Font = Enum.Font.GothamBold
 overlayToggleButton.Parent = contentFrame
 
-local overlayToggleCorner = Instance.new("UICorner")
-overlayToggleCorner.CornerRadius = UDim.new(0, 7)
-overlayToggleCorner.Parent = overlayToggleButton
+addCorner(overlayToggleButton, UDim.new(0, 7))
+
+local targetModeButton = Instance.new("TextButton")
+targetModeButton.Name = "TargetModeButton"
+targetModeButton.Size = UDim2.new(0, 32, 0, 32)
+targetModeButton.Position = UDim2.new(0, 216, 0, 80)
+targetModeButton.BackgroundColor3 = Color3.fromRGB(80, 150, 255)
+targetModeButton.BorderSizePixel = 0
+targetModeButton.Text = "◎P"
+targetModeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+targetModeButton.TextSize = 12
+targetModeButton.Font = Enum.Font.GothamBold
+targetModeButton.Parent = contentFrame
+
+addCorner(targetModeButton, UDim.new(0, 7))
 
 local footerLabel = Instance.new("TextButton")
 footerLabel.Size = UDim2.new(1, 0, 0, 25)
@@ -350,9 +358,7 @@ confirmFrame.Visible = false
 confirmFrame.ZIndex = 10
 confirmFrame.Parent = mainFrame
 
-local confirmCorner = Instance.new("UICorner")
-confirmCorner.CornerRadius = UDim.new(0, 12)
-confirmCorner.Parent = confirmFrame
+addCorner(confirmFrame, UDim.new(0, 12))
 
 local confirmText = Instance.new("TextLabel")
 confirmText.Size = UDim2.new(1, -24, 0, 40)
@@ -378,9 +384,7 @@ yesButton.Font = Enum.Font.GothamBold
 yesButton.ZIndex = 11
 yesButton.Parent = confirmFrame
 
-local yesCorner = Instance.new("UICorner")
-yesCorner.CornerRadius = UDim.new(0, 7)
-yesCorner.Parent = yesButton
+addCorner(yesButton, UDim.new(0, 7))
 
 local noButton = Instance.new("TextButton")
 noButton.Size = UDim2.new(0, 105, 0, 32)
@@ -394,9 +398,91 @@ noButton.Font = Enum.Font.GothamBold
 noButton.ZIndex = 11
 noButton.Parent = confirmFrame
 
-local noCorner = Instance.new("UICorner")
-noCorner.CornerRadius = UDim.new(0, 7)
-noCorner.Parent = noButton
+addCorner(noButton, UDim.new(0, 7))
+
+local targetFrame = Instance.new("Frame")
+targetFrame.Name = "TargetFrame"
+targetFrame.Size = UDim2.new(1, 0, 1, 0)
+targetFrame.Position = UDim2.new(1, 0, 0, 0)
+targetFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+targetFrame.BorderSizePixel = 0
+targetFrame.Active = true
+targetFrame.Visible = false
+targetFrame.ZIndex = 10
+targetFrame.Parent = mainFrame
+
+addCorner(targetFrame, UDim.new(0, 12))
+
+local targetTitleBar = Instance.new("Frame")
+targetTitleBar.Size = UDim2.new(1, 0, 0, 35)
+targetTitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+targetTitleBar.BorderSizePixel = 0
+targetTitleBar.ZIndex = 11
+targetTitleBar.Parent = targetFrame
+
+addCorner(targetTitleBar, UDim.new(0, 12))
+
+local targetTitleFix = Instance.new("Frame")
+targetTitleFix.Size = UDim2.new(1, 0, 0, 12)
+targetTitleFix.Position = UDim2.new(0, 0, 1, -12)
+targetTitleFix.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+targetTitleFix.BorderSizePixel = 0
+targetTitleFix.ZIndex = 11
+targetTitleFix.Parent = targetTitleBar
+
+local targetTitleLabel = Instance.new("TextLabel")
+targetTitleLabel.Size = UDim2.new(1, -50, 1, 0)
+targetTitleLabel.Position = UDim2.new(0, 10, 0, 0)
+targetTitleLabel.BackgroundTransparency = 1
+targetTitleLabel.Active = true
+targetTitleLabel.Text = "Target selection"
+targetTitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+targetTitleLabel.TextSize = 15
+targetTitleLabel.Font = Enum.Font.GothamBold
+targetTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+targetTitleLabel.ZIndex = 11
+targetTitleLabel.Parent = targetTitleBar
+
+local targetBackButton = Instance.new("TextButton")
+targetBackButton.Size = UDim2.new(0, 26, 0, 26)
+targetBackButton.Position = UDim2.new(1, -28, 0, 4)
+targetBackButton.BackgroundColor3 = Color3.fromRGB(80, 80, 90)
+targetBackButton.BorderSizePixel = 0
+targetBackButton.Text = "←"
+targetBackButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+targetBackButton.TextSize = 14
+targetBackButton.Font = Enum.Font.GothamBold
+targetBackButton.ZIndex = 11
+targetBackButton.Parent = targetTitleBar
+
+addCorner(targetBackButton, UDim.new(0, 6))
+
+local targetModeButtons = {}
+local targetModeButtonDefinitions = {
+	{"all", "All"},
+	{"players", "Players"},
+	{"npcs", "NPC"},
+}
+for index, definition in ipairs(targetModeButtonDefinitions) do
+	local mode = definition[1]
+	local modeButton = Instance.new("TextButton")
+	modeButton.Name = "Target_" .. mode
+	modeButton.Size = UDim2.new(0, 236, 0, 30)
+	modeButton.Position = UDim2.new(0, 12, 0, 43 + (index - 1) * 38)
+	modeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+	modeButton.BorderSizePixel = 0
+	modeButton.Text = definition[2]
+	modeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	modeButton.TextSize = 13
+	modeButton.Font = Enum.Font.GothamBold
+	modeButton.ZIndex = 11
+	modeButton.Parent = targetFrame
+
+	local modeCorner = Instance.new("UICorner")
+	modeCorner.CornerRadius = UDim.new(0, 7)
+	modeCorner.Parent = modeButton
+	targetModeButtons[mode] = modeButton
+end
 
 local settingsFrame = Instance.new("Frame")
 settingsFrame.Name = "SettingsFrame"
@@ -409,9 +495,7 @@ settingsFrame.Visible = false
 settingsFrame.ZIndex = 10
 settingsFrame.Parent = mainFrame
 
-local settingsFrameCorner = Instance.new("UICorner")
-settingsFrameCorner.CornerRadius = UDim.new(0, 12)
-settingsFrameCorner.Parent = settingsFrame
+addCorner(settingsFrame, UDim.new(0, 12))
 
 local settingsTitleBar = Instance.new("Frame")
 settingsTitleBar.Size = UDim2.new(1, 0, 0, 35)
@@ -420,9 +504,7 @@ settingsTitleBar.BorderSizePixel = 0
 settingsTitleBar.ZIndex = 11
 settingsTitleBar.Parent = settingsFrame
 
-local settingsTitleCorner = Instance.new("UICorner")
-settingsTitleCorner.CornerRadius = UDim.new(0, 12)
-settingsTitleCorner.Parent = settingsTitleBar
+addCorner(settingsTitleBar, UDim.new(0, 12))
 
 local settingsTitleFix = Instance.new("Frame")
 settingsTitleFix.Size = UDim2.new(1, 0, 0, 12)
@@ -457,9 +539,7 @@ backButton.Font = Enum.Font.GothamBold
 backButton.ZIndex = 11
 backButton.Parent = settingsTitleBar
 
-local backCorner = Instance.new("UICorner")
-backCorner.CornerRadius = UDim.new(0, 6)
-backCorner.Parent = backButton
+addCorner(backButton, UDim.new(0, 6))
 
 local settingsContentFrame = Instance.new("ScrollingFrame")
 settingsContentFrame.Size = UDim2.new(1, 0, 1, -35)
@@ -496,9 +576,7 @@ darkButton.Font = Enum.Font.GothamBold
 darkButton.ZIndex = 11
 darkButton.Parent = settingsContentFrame
 
-local darkCorner = Instance.new("UICorner")
-darkCorner.CornerRadius = UDim.new(0, 7)
-darkCorner.Parent = darkButton
+addCorner(darkButton, UDim.new(0, 7))
 
 local darkStroke = Instance.new("UIStroke")
 darkStroke.Color = Color3.fromRGB(80, 150, 255)
@@ -518,9 +596,7 @@ lightButton.Font = Enum.Font.GothamBold
 lightButton.ZIndex = 11
 lightButton.Parent = settingsContentFrame
 
-local lightCorner = Instance.new("UICorner")
-lightCorner.CornerRadius = UDim.new(0, 7)
-lightCorner.Parent = lightButton
+addCorner(lightButton, UDim.new(0, 7))
 
 local lightStroke = Instance.new("UIStroke")
 lightStroke.Color = Color3.fromRGB(80, 150, 255)
@@ -553,9 +629,7 @@ hideExpandedPartsButton.Font = Enum.Font.GothamBold
 hideExpandedPartsButton.ZIndex = 11
 hideExpandedPartsButton.Parent = settingsContentFrame
 
-local hideExpandedPartsCorner = Instance.new("UICorner")
-hideExpandedPartsCorner.CornerRadius = UDim.new(0, 7)
-hideExpandedPartsCorner.Parent = hideExpandedPartsButton
+addCorner(hideExpandedPartsButton, UDim.new(0, 7))
 
 local keybindSectionLabel = Instance.new("TextLabel")
 keybindSectionLabel.Size = UDim2.new(1, -24, 0, 22)
@@ -617,6 +691,7 @@ local expansionSize = 10
 local expanderEnabled = false
 local overlayEnabled = false
 local hideExpandedParts = false
+local targetMode = DEFAULT_TARGET_MODE
 local isMinimized = false
 local currentTheme = "dark"
 local guiVisible = true
@@ -628,6 +703,8 @@ local dragEndConnection = nil
 local viewportSizeConnection = nil
 local viewportClampScheduled = false
 local overlayData = {}
+local npcOverlayData = {}
+local npcCharacters = {}
 local characterConnections = {}
 local trackedCharacters = {}
 local originalPartData = {}
@@ -695,11 +772,153 @@ local expandablePartNames = {
 	"RightUpperLeg", "RightLowerLeg", "RightFoot"
 }
 
+local partSettings = {}
+local partSettingControls = {}
+
+local partSettingsSectionLabel = Instance.new("TextLabel")
+partSettingsSectionLabel.Size = UDim2.new(1, -24, 0, 22)
+partSettingsSectionLabel.Position = UDim2.new(0, 12, 0, 322)
+partSettingsSectionLabel.BackgroundTransparency = 1
+partSettingsSectionLabel.Text = "Per-part expansion (blank = global):"
+partSettingsSectionLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
+partSettingsSectionLabel.TextSize = 12
+partSettingsSectionLabel.Font = Enum.Font.GothamBold
+partSettingsSectionLabel.TextXAlignment = Enum.TextXAlignment.Left
+partSettingsSectionLabel.ZIndex = 11
+partSettingsSectionLabel.Parent = settingsContentFrame
+
+for index, partName in ipairs(expandablePartNames) do
+	partSettings[partName] = {
+		enabled = true,
+		sizeOverride = nil,
+	}
+
+	local rowY = 350 + (index - 1) * 34
+	local partLabel = Instance.new("TextLabel")
+	partLabel.Name = "PartLabel_" .. partName
+	partLabel.Size = UDim2.new(0, 106, 0, 28)
+	partLabel.Position = UDim2.new(0, 12, 0, rowY)
+	partLabel.BackgroundTransparency = 1
+	partLabel.Text = partName
+	partLabel.TextColor3 = Color3.fromRGB(180, 180, 190)
+	partLabel.TextSize = 10
+	partLabel.Font = Enum.Font.Gotham
+	partLabel.TextXAlignment = Enum.TextXAlignment.Left
+	partLabel.ZIndex = 11
+	partLabel.Parent = settingsContentFrame
+
+	local partToggle = Instance.new("TextButton")
+	partToggle.Name = "PartToggle_" .. partName
+	partToggle.Size = UDim2.new(0, 48, 0, 28)
+	partToggle.Position = UDim2.new(0, 122, 0, rowY)
+	partToggle.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
+	partToggle.BorderSizePixel = 0
+	partToggle.Text = "ON"
+	partToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+	partToggle.TextSize = 11
+	partToggle.Font = Enum.Font.GothamBold
+	partToggle.ZIndex = 11
+	partToggle.Parent = settingsContentFrame
+
+	local toggleCorner = Instance.new("UICorner")
+	toggleCorner.CornerRadius = UDim.new(0, 7)
+	toggleCorner.Parent = partToggle
+
+	local partSizeInput = Instance.new("TextBox")
+	partSizeInput.Name = "PartSize_" .. partName
+	partSizeInput.Size = UDim2.new(0, 64, 0, 28)
+	partSizeInput.Position = UDim2.new(0, 178, 0, rowY)
+	partSizeInput.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+	partSizeInput.BorderSizePixel = 0
+	partSizeInput.ClearTextOnFocus = false
+	partSizeInput.Text = ""
+	partSizeInput.PlaceholderText = "Default"
+	partSizeInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+	partSizeInput.PlaceholderColor3 = Color3.fromRGB(140, 140, 150)
+	partSizeInput.TextSize = 10
+	partSizeInput.Font = Enum.Font.Gotham
+	partSizeInput.ZIndex = 11
+	partSizeInput.Parent = settingsContentFrame
+
+	local inputCorner = Instance.new("UICorner")
+	inputCorner.CornerRadius = UDim.new(0, 7)
+	inputCorner.Parent = partSizeInput
+
+	local inputStroke = Instance.new("UIStroke")
+	inputStroke.Color = Color3.fromRGB(80, 80, 100)
+	inputStroke.Thickness = 1
+	inputStroke.ZIndex = 11
+	inputStroke.Parent = partSizeInput
+
+	partSettingControls[partName] = {
+		label = partLabel,
+		toggle = partToggle,
+		input = partSizeInput,
+		stroke = inputStroke,
+	}
+end
+settingsContentFrame.CanvasSize = UDim2.new(0, 0, 0, 1080)
+
 local function isRuntimeGuiMounted()
 	return player.Parent == Players
 		and playerGui.Parent == player
 		and screenGui.Parent == playerGui
 		and mainFrame.Parent == screenGui
+end
+
+local function targetModeIncludesPlayers()
+	return targetMode == "all" or targetMode == "players"
+end
+
+local function targetModeIncludesNpcs()
+	return targetMode == "all" or targetMode == "npcs"
+end
+
+local function getDefaultPartSize(partName)
+	if partName == "HumanoidRootPart" then return expansionSize end
+	if partName == "Head" then return expansionSize * 0.8 end
+	return expansionSize * 0.7
+end
+
+local function getEffectivePartSize(partName)
+	local setting = partSettings[partName]
+	return setting and setting.sizeOverride or getDefaultPartSize(partName)
+end
+
+local function updatePartSettingVisual(partName)
+	local setting = partSettings[partName]
+	local controls = partSettingControls[partName]
+	if not setting or not controls then return end
+	controls.toggle.Text = setting.enabled and "ON" or "OFF"
+	controls.toggle.BackgroundColor3 = setting.enabled
+		and Color3.fromRGB(50, 200, 100)
+		or Color3.fromRGB(220, 50, 50)
+	controls.input.Text = setting.sizeOverride and tostring(setting.sizeOverride) or ""
+	controls.input.PlaceholderText = tostring(getDefaultPartSize(partName))
+end
+
+local function updateAllPartSettingVisuals()
+	for _, partName in ipairs(expandablePartNames) do
+		updatePartSettingVisual(partName)
+	end
+end
+
+local function updateTargetModeVisual()
+	local abbreviations = {
+		all = "◎A",
+		players = "◎P",
+		npcs = "◎N",
+	}
+	targetModeButton.Text = abbreviations[targetMode] or "◎P"
+	for mode, button in pairs(targetModeButtons) do
+		local selected = mode == targetMode
+		button.BackgroundColor3 = selected and Color3.fromRGB(80, 150, 255)
+			or currentTheme == "light" and Color3.fromRGB(225, 225, 235)
+			or Color3.fromRGB(40, 40, 55)
+		button.TextColor3 = (selected or currentTheme ~= "light")
+			and Color3.fromRGB(255, 255, 255)
+			or Color3.fromRGB(40, 40, 50)
+	end
 end
 
 local function getKeyName(keyCode)
@@ -712,8 +931,16 @@ local function collectAndSave()
 		expansionSize = expansionSize,
 		theme = currentTheme,
 		hideExpandedParts = hideExpandedParts,
+		targetMode = targetMode,
+		partSettings = {},
 		keybinds = {},
 	}
+	for _, partName in ipairs(expandablePartNames) do
+		local setting = partSettings[partName]
+		local savedSetting = {enabled = setting.enabled}
+		if setting.sizeOverride then savedSetting.sizeOverride = setting.sizeOverride end
+		data.partSettings[partName] = savedSetting
+	end
 	for _, actionName in ipairs(keybindActionNames) do
 		local keyCode = keybinds[actionName]
 		data.keybinds[actionName] = keyCode and keyCode.Name or "None"
@@ -845,13 +1072,27 @@ local function applyTheme(theme, shouldSave)
 		TweenService:Create(settingsTitleBar, tweenInfo, {BackgroundColor3 = Color3.fromRGB(245, 245, 250)}):Play()
 		TweenService:Create(settingsTitleFix, tweenInfo, {BackgroundColor3 = Color3.fromRGB(245, 245, 250)}):Play()
 		TweenService:Create(settingsTitleLabel, tweenInfo, {TextColor3 = Color3.fromRGB(30, 30, 40)}):Play()
+		TweenService:Create(targetFrame, tweenInfo, {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+		TweenService:Create(targetTitleBar, tweenInfo, {BackgroundColor3 = Color3.fromRGB(245, 245, 250)}):Play()
+		TweenService:Create(targetTitleFix, tweenInfo, {BackgroundColor3 = Color3.fromRGB(245, 245, 250)}):Play()
+		TweenService:Create(targetTitleLabel, tweenInfo, {TextColor3 = Color3.fromRGB(30, 30, 40)}):Play()
 		TweenService:Create(themeLabel, tweenInfo, {TextColor3 = Color3.fromRGB(60, 60, 70)}):Play()
 		TweenService:Create(hideExpandedPartsLabel, tweenInfo, {TextColor3 = Color3.fromRGB(60, 60, 70)}):Play()
 		TweenService:Create(keybindSectionLabel, tweenInfo, {TextColor3 = Color3.fromRGB(60, 60, 70)}):Play()
+		TweenService:Create(partSettingsSectionLabel, tweenInfo, {TextColor3 = Color3.fromRGB(60, 60, 70)}):Play()
 		TweenService:Create(settingsButtonTop, tweenInfo, {BackgroundColor3 = Color3.fromRGB(200, 200, 220), TextColor3 = Color3.fromRGB(30, 30, 40)}):Play()
 		TweenService:Create(darkStroke, tweenInfo, {Color = Color3.fromRGB(200, 200, 210)}):Play()
 		for _, lbl in pairs(keybindLabels) do
 			TweenService:Create(lbl, tweenInfo, {TextColor3 = Color3.fromRGB(80, 80, 90)}):Play()
+		end
+		for _, controls in pairs(partSettingControls) do
+			TweenService:Create(controls.label, tweenInfo, {TextColor3 = Color3.fromRGB(80, 80, 90)}):Play()
+			TweenService:Create(controls.input, tweenInfo, {
+				BackgroundColor3 = Color3.fromRGB(235, 235, 245),
+				TextColor3 = Color3.fromRGB(30, 30, 40),
+				PlaceholderColor3 = Color3.fromRGB(120, 120, 130),
+			}):Play()
+			TweenService:Create(controls.stroke, tweenInfo, {Color = Color3.fromRGB(200, 200, 210)}):Play()
 		end
 		TweenService:Create(lightStroke, tweenInfo, {Transparency = 0}):Play()
 	else
@@ -872,16 +1113,31 @@ local function applyTheme(theme, shouldSave)
 		TweenService:Create(settingsTitleBar, tweenInfo, {BackgroundColor3 = Color3.fromRGB(30, 30, 40)}):Play()
 		TweenService:Create(settingsTitleFix, tweenInfo, {BackgroundColor3 = Color3.fromRGB(30, 30, 40)}):Play()
 		TweenService:Create(settingsTitleLabel, tweenInfo, {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+		TweenService:Create(targetFrame, tweenInfo, {BackgroundColor3 = Color3.fromRGB(20, 20, 25)}):Play()
+		TweenService:Create(targetTitleBar, tweenInfo, {BackgroundColor3 = Color3.fromRGB(30, 30, 40)}):Play()
+		TweenService:Create(targetTitleFix, tweenInfo, {BackgroundColor3 = Color3.fromRGB(30, 30, 40)}):Play()
+		TweenService:Create(targetTitleLabel, tweenInfo, {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 		TweenService:Create(themeLabel, tweenInfo, {TextColor3 = Color3.fromRGB(200, 200, 210)}):Play()
 		TweenService:Create(hideExpandedPartsLabel, tweenInfo, {TextColor3 = Color3.fromRGB(200, 200, 210)}):Play()
 		TweenService:Create(keybindSectionLabel, tweenInfo, {TextColor3 = Color3.fromRGB(200, 200, 210)}):Play()
+		TweenService:Create(partSettingsSectionLabel, tweenInfo, {TextColor3 = Color3.fromRGB(200, 200, 210)}):Play()
 		TweenService:Create(settingsButtonTop, tweenInfo, {BackgroundColor3 = Color3.fromRGB(100, 100, 120), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
 		for _, lbl in pairs(keybindLabels) do
 			TweenService:Create(lbl, tweenInfo, {TextColor3 = Color3.fromRGB(180, 180, 190)}):Play()
 		end
+		for _, controls in pairs(partSettingControls) do
+			TweenService:Create(controls.label, tweenInfo, {TextColor3 = Color3.fromRGB(180, 180, 190)}):Play()
+			TweenService:Create(controls.input, tweenInfo, {
+				BackgroundColor3 = Color3.fromRGB(40, 40, 55),
+				TextColor3 = Color3.fromRGB(255, 255, 255),
+				PlaceholderColor3 = Color3.fromRGB(140, 140, 150),
+			}):Play()
+			TweenService:Create(controls.stroke, tweenInfo, {Color = Color3.fromRGB(80, 80, 100)}):Play()
+		end
 		TweenService:Create(lightStroke, tweenInfo, {Transparency = 1}):Play()
 		TweenService:Create(darkStroke, tweenInfo, {Color = Color3.fromRGB(80, 150, 255)}):Play()
 	end
+	updateTargetModeVisual()
 	if shouldSave ~= false then
 		collectAndSave()
 	end
@@ -894,11 +1150,11 @@ local function destroyInstance(instance)
 	end)
 end
 
-local function removeManagedOverlayInstances(targetPlayer, character)
-	if not targetPlayer or not character then return end
+local function removeManagedOverlayInstances(targetIdentifier, character)
+	if type(targetIdentifier) ~= "string" or not character then return end
 	local managedClasses = {
-		["PlayerOverlayBillboard_" .. targetPlayer.Name] = "BillboardGui",
-		["PlayerOverlayHighlight_" .. targetPlayer.Name] = "Highlight",
+		["PlayerOverlayBillboard_" .. targetIdentifier] = "BillboardGui",
+		["PlayerOverlayHighlight_" .. targetIdentifier] = "Highlight",
 	}
 	local ok, descendants = pcall(function()
 		return character:GetDescendants()
@@ -912,14 +1168,42 @@ local function removeManagedOverlayInstances(targetPlayer, character)
 	end
 end
 
-local function removePlayerOverlay(targetPlayer)
-	local data = overlayData[targetPlayer]
+local function destroyOverlayData(data)
 	if not data then return end
 	destroyInstance(data.displayLabel)
 	destroyInstance(data.infoLabel)
 	destroyInstance(data.gui)
 	destroyInstance(data.highlight)
+end
+
+local function removePlayerOverlay(targetPlayer)
+	local data = overlayData[targetPlayer]
+	if not data then return end
+	destroyOverlayData(data)
 	overlayData[targetPlayer] = nil
+end
+
+local function removeNpcOverlay(character)
+	local data = npcOverlayData[character]
+	if not data then return end
+	destroyOverlayData(data)
+	npcOverlayData[character] = nil
+end
+
+local function isNpcCharacter(character)
+	return character ~= nil
+		and character:IsA("Model")
+		and isCharacterInWorkspace(character)
+		and character:FindFirstChildOfClass("Humanoid") ~= nil
+		and Players:GetPlayerFromCharacter(character) == nil
+end
+
+local function registerNpcDescendant(descendant)
+	if not descendant or not descendant:IsA("Humanoid") then return end
+	local character = descendant.Parent
+	if isNpcCharacter(character) then
+		npcCharacters[character] = true
+	end
 end
 
 local function removeAllPlayerOverlays()
@@ -930,10 +1214,22 @@ local function removeAllPlayerOverlays()
 	for _, targetPlayer in ipairs(playersToRemove) do
 		removePlayerOverlay(targetPlayer)
 	end
+
+	local npcsToRemove = {}
+	for character in pairs(npcOverlayData) do
+		table.insert(npcsToRemove, character)
+	end
+	for _, character in ipairs(npcsToRemove) do
+		removeNpcOverlay(character)
+	end
+
 	for _, targetPlayer in ipairs(Players:GetPlayers()) do
 		if targetPlayer ~= player and targetPlayer.Character then
-			removeManagedOverlayInstances(targetPlayer, targetPlayer.Character)
+			removeManagedOverlayInstances(targetPlayer.Name, targetPlayer.Character)
 		end
+	end
+	for character in pairs(npcCharacters) do
+		if character then removeManagedOverlayInstances(character.Name, character) end
 	end
 end
 
@@ -951,7 +1247,7 @@ local function createPlayerOverlay(targetPlayer)
 	if not attachPart then return end
 	if not humanoid or humanoid.Health <= 0 then return end
 
-	removeManagedOverlayInstances(targetPlayer, character)
+	removeManagedOverlayInstances(targetPlayer.Name, character)
 	local teamColor = getTeamColor(targetPlayer)
 	local displayName = tostring(targetPlayer.DisplayName or targetPlayer.Name)
 	local hasDisplayName = displayName ~= targetPlayer.Name
@@ -1030,91 +1326,274 @@ local function createPlayerOverlay(targetPlayer)
 	}
 end
 
-local function updatePlayerOverlays()
-	if isShuttingDown or not overlayEnabled then return end
-	local localCharacter = player.Character
-	local localDistancePart = nil
-	if isCharacterInWorkspace(localCharacter) then
-		local localRootPart = localCharacter:FindFirstChild("HumanoidRootPart")
-		local localHead = localCharacter:FindFirstChild("Head")
-		if localRootPart and localRootPart:IsA("BasePart") then
-			localDistancePart = localRootPart
-		elseif localHead and localHead:IsA("BasePart") then
-			localDistancePart = localHead
-		end
+local function createNpcOverlay(character)
+	if isShuttingDown or not isNpcCharacter(character) then return end
+	removeNpcOverlay(character)
+
+	local head = character:FindFirstChild("Head")
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	local attachPart = head and head:IsA("BasePart") and head
+		or rootPart and rootPart:IsA("BasePart") and rootPart
+	if not attachPart or not humanoid or humanoid.Health <= 0 then return end
+
+	local identifier = character.Name
+	removeManagedOverlayInstances(identifier, character)
+	local overlayColor = Color3.fromRGB(255, 255, 255)
+	local humanoidDisplayName = tostring(humanoid.DisplayName or "")
+	local displayName = humanoidDisplayName ~= "" and humanoidDisplayName or identifier
+	local hasDisplayName = displayName ~= identifier
+	local guiHeight = hasDisplayName and 36 or 20
+
+	local billboardGui = Instance.new("BillboardGui")
+	billboardGui.Name = "PlayerOverlayBillboard_" .. identifier
+	billboardGui.AlwaysOnTop = true
+	billboardGui.Size = UDim2.new(0, 300, 0, guiHeight)
+	billboardGui.StudsOffset = Vector3.new(0, 3.2, 0)
+	billboardGui.Parent = attachPart
+
+	local displayLabel = nil
+	local infoLabel = nil
+	if hasDisplayName then
+		displayLabel = Instance.new("TextLabel")
+		displayLabel.Name = "DisplayLabel"
+		displayLabel.Size = UDim2.new(1, 0, 0, 16)
+		displayLabel.BackgroundTransparency = 1
+		displayLabel.TextColor3 = overlayColor
+		displayLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+		displayLabel.TextStrokeTransparency = 0.3
+		displayLabel.TextSize = 14
+		displayLabel.Font = Enum.Font.GothamBold
+		displayLabel.Text = displayName
+		displayLabel.TextXAlignment = Enum.TextXAlignment.Center
+		displayLabel.Parent = billboardGui
+
+		infoLabel = Instance.new("TextLabel")
+		infoLabel.Name = "InfoLabel"
+		infoLabel.Size = UDim2.new(1, 0, 0, 16)
+		infoLabel.Position = UDim2.new(0, 0, 0, 18)
+		infoLabel.BackgroundTransparency = 1
+		infoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+		infoLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+		infoLabel.TextStrokeTransparency = 0.3
+		infoLabel.TextSize = 11
+		infoLabel.Font = Enum.Font.Gotham
+		infoLabel.Text = ""
+		infoLabel.TextXAlignment = Enum.TextXAlignment.Center
+		infoLabel.Parent = billboardGui
+	else
+		infoLabel = Instance.new("TextLabel")
+		infoLabel.Name = "InfoLabel"
+		infoLabel.Size = UDim2.new(1, 0, 1, 0)
+		infoLabel.BackgroundTransparency = 1
+		infoLabel.TextColor3 = overlayColor
+		infoLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+		infoLabel.TextStrokeTransparency = 0.3
+		infoLabel.TextSize = 13
+		infoLabel.Font = Enum.Font.GothamBold
+		infoLabel.Text = ""
+		infoLabel.TextXAlignment = Enum.TextXAlignment.Center
+		infoLabel.Parent = billboardGui
 	end
 
-	for _, targetPlayer in ipairs(Players:GetPlayers()) do
-		if targetPlayer ~= player then
-			local character = targetPlayer.Character
-			local head = character and character:FindFirstChild("Head")
-			local rootPart = character and character:FindFirstChild("HumanoidRootPart")
-			local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-			local attachPart = head and head:IsA("BasePart") and head
-				or rootPart and rootPart:IsA("BasePart") and rootPart
-			local distancePart = rootPart and rootPart:IsA("BasePart") and rootPart or attachPart
+	local highlight = Instance.new("Highlight")
+	highlight.Name = "PlayerOverlayHighlight_" .. identifier
+	highlight.Adornee = character
+	highlight.FillColor = overlayColor
+	highlight.OutlineColor = overlayColor
+	highlight.FillTransparency = 0.5
+	highlight.OutlineTransparency = 0
+	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	highlight.Parent = character
 
-			if not isCharacterInWorkspace(character) or not attachPart or not humanoid or humanoid.Health <= 0 then
-				local hadOverlay = overlayData[targetPlayer] ~= nil
-				removePlayerOverlay(targetPlayer)
-				if hadOverlay and character then removeManagedOverlayInstances(targetPlayer, character) end
-			else
-				local data = overlayData[targetPlayer]
-				local currentDisplayName = tostring(targetPlayer.DisplayName or targetPlayer.Name)
-				local currentlyHasDisplayName = currentDisplayName ~= targetPlayer.Name
-				local expectedBillboardName = "PlayerOverlayBillboard_" .. targetPlayer.Name
-				local expectedHighlightName = "PlayerOverlayHighlight_" .. targetPlayer.Name
-				local needsRecreate = not data
-					or data.character ~= character
-					or data.attachPart ~= attachPart
-					or data.hasDisplayName ~= currentlyHasDisplayName
-					or not data.gui or data.gui.Parent ~= attachPart
-					or data.gui.Name ~= expectedBillboardName
-					or not data.infoLabel or data.infoLabel.Parent ~= data.gui
-					or data.hasDisplayName and (not data.displayLabel or data.displayLabel.Parent ~= data.gui)
-					or not data.highlight or data.highlight.Parent ~= character
-					or data.highlight.Name ~= expectedHighlightName
-					or data.highlight.Adornee ~= character
+	npcOverlayData[character] = {
+		character = character,
+		identifier = identifier,
+		attachPart = attachPart,
+		gui = billboardGui,
+		displayLabel = displayLabel,
+		infoLabel = infoLabel,
+		highlight = highlight,
+		hasDisplayName = hasDisplayName,
+	}
+end
 
-				if needsRecreate then
-					createPlayerOverlay(targetPlayer)
-					data = overlayData[targetPlayer]
-				end
+local function getLocalDistancePart()
+	local localCharacter = player.Character
+	if not isCharacterInWorkspace(localCharacter) then return nil end
+	local localRootPart = localCharacter:FindFirstChild("HumanoidRootPart")
+	local localHead = localCharacter:FindFirstChild("Head")
+	if localRootPart and localRootPart:IsA("BasePart") then return localRootPart end
+	if localHead and localHead:IsA("BasePart") then return localHead end
+	return nil
+end
 
-				if data and data.infoLabel and data.infoLabel.Parent then
-					local teamColor = getTeamColor(targetPlayer)
-					local studsText = "?"
-					if localDistancePart and distancePart then
-						studsText = tostring(math.floor((localDistancePart.Position - distancePart.Position).Magnitude))
-					end
-					local hpText = math.floor(math.max(0, humanoid.Health))
-						.. "/" .. math.floor(math.max(0, humanoid.MaxHealth)) .. " HP"
+local function updatePlayerOverlayTarget(targetPlayer, localDistancePart)
+	local character = targetPlayer.Character
+	local head = character and character:FindFirstChild("Head")
+	local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	local attachPart = head and head:IsA("BasePart") and head
+		or rootPart and rootPart:IsA("BasePart") and rootPart
+	local distancePart = rootPart and rootPart:IsA("BasePart") and rootPart or attachPart
 
-					if data.hasDisplayName then
-						if data.displayLabel and data.displayLabel.Parent then
-							data.displayLabel.Text = currentDisplayName
-							data.displayLabel.TextColor3 = teamColor
-						end
-						data.infoLabel.Text = studsText .. " studs | @" .. targetPlayer.Name .. " | " .. hpText
-					else
-						data.infoLabel.Text = studsText .. " studs | " .. targetPlayer.Name .. " | " .. hpText
-						data.infoLabel.TextColor3 = teamColor
-					end
-					data.highlight.FillColor = teamColor
-					data.highlight.OutlineColor = teamColor
-				end
+	if not isCharacterInWorkspace(character) or not attachPart or not humanoid or humanoid.Health <= 0 then
+		local hadOverlay = overlayData[targetPlayer] ~= nil
+		removePlayerOverlay(targetPlayer)
+		if hadOverlay and character then removeManagedOverlayInstances(targetPlayer.Name, character) end
+		return
+	end
+
+	local data = overlayData[targetPlayer]
+	local currentDisplayName = tostring(targetPlayer.DisplayName or targetPlayer.Name)
+	local currentlyHasDisplayName = currentDisplayName ~= targetPlayer.Name
+	local expectedBillboardName = "PlayerOverlayBillboard_" .. targetPlayer.Name
+	local expectedHighlightName = "PlayerOverlayHighlight_" .. targetPlayer.Name
+	local needsRecreate = not data
+		or data.character ~= character
+		or data.attachPart ~= attachPart
+		or data.hasDisplayName ~= currentlyHasDisplayName
+		or not data.gui or data.gui.Parent ~= attachPart
+		or data.gui.Name ~= expectedBillboardName
+		or not data.infoLabel or data.infoLabel.Parent ~= data.gui
+		or data.hasDisplayName and (not data.displayLabel or data.displayLabel.Parent ~= data.gui)
+		or not data.highlight or data.highlight.Parent ~= character
+		or data.highlight.Name ~= expectedHighlightName
+		or data.highlight.Adornee ~= character
+
+	if needsRecreate then
+		createPlayerOverlay(targetPlayer)
+		data = overlayData[targetPlayer]
+	end
+	if not data or not data.infoLabel or not data.infoLabel.Parent then return end
+
+	local teamColor = getTeamColor(targetPlayer)
+	local studsText = "?"
+	if localDistancePart and distancePart then
+		studsText = tostring(math.floor((localDistancePart.Position - distancePart.Position).Magnitude))
+	end
+	local hpText = math.floor(math.max(0, humanoid.Health))
+		.. "/" .. math.floor(math.max(0, humanoid.MaxHealth)) .. " HP"
+
+	if data.hasDisplayName then
+		if data.displayLabel and data.displayLabel.Parent then
+			data.displayLabel.Text = currentDisplayName
+			data.displayLabel.TextColor3 = teamColor
+		end
+		data.infoLabel.Text = studsText .. " studs | @" .. targetPlayer.Name .. " | " .. hpText
+	else
+		data.infoLabel.Text = studsText .. " studs | " .. targetPlayer.Name .. " | " .. hpText
+		data.infoLabel.TextColor3 = teamColor
+	end
+	data.highlight.FillColor = teamColor
+	data.highlight.OutlineColor = teamColor
+end
+
+local function updateNpcOverlayTarget(character, localDistancePart)
+	local head = character and character:FindFirstChild("Head")
+	local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	local attachPart = head and head:IsA("BasePart") and head
+		or rootPart and rootPart:IsA("BasePart") and rootPart
+	local distancePart = rootPart and rootPart:IsA("BasePart") and rootPart or attachPart
+
+	if not isNpcCharacter(character) or not attachPart or not humanoid or humanoid.Health <= 0 then
+		local data = npcOverlayData[character]
+		removeNpcOverlay(character)
+		if data then removeManagedOverlayInstances(data.identifier or character.Name, character) end
+		return
+	end
+
+	local identifier = character.Name
+	local humanoidDisplayName = tostring(humanoid.DisplayName or "")
+	local currentDisplayName = humanoidDisplayName ~= "" and humanoidDisplayName or identifier
+	local currentlyHasDisplayName = currentDisplayName ~= identifier
+	local expectedBillboardName = "PlayerOverlayBillboard_" .. identifier
+	local expectedHighlightName = "PlayerOverlayHighlight_" .. identifier
+	local data = npcOverlayData[character]
+	local needsRecreate = not data
+		or data.identifier ~= identifier
+		or data.attachPart ~= attachPart
+		or data.hasDisplayName ~= currentlyHasDisplayName
+		or not data.gui or data.gui.Parent ~= attachPart
+		or data.gui.Name ~= expectedBillboardName
+		or not data.infoLabel or data.infoLabel.Parent ~= data.gui
+		or data.hasDisplayName and (not data.displayLabel or data.displayLabel.Parent ~= data.gui)
+		or not data.highlight or data.highlight.Parent ~= character
+		or data.highlight.Name ~= expectedHighlightName
+		or data.highlight.Adornee ~= character
+
+	if needsRecreate then
+		createNpcOverlay(character)
+		data = npcOverlayData[character]
+	end
+	if not data or not data.infoLabel or not data.infoLabel.Parent then return end
+
+	local overlayColor = Color3.fromRGB(255, 255, 255)
+	local studsText = "?"
+	if localDistancePart and distancePart then
+		studsText = tostring(math.floor((localDistancePart.Position - distancePart.Position).Magnitude))
+	end
+	local hpText = math.floor(math.max(0, humanoid.Health))
+		.. "/" .. math.floor(math.max(0, humanoid.MaxHealth)) .. " HP"
+
+	if data.hasDisplayName then
+		if data.displayLabel and data.displayLabel.Parent then
+			data.displayLabel.Text = currentDisplayName
+			data.displayLabel.TextColor3 = overlayColor
+		end
+		data.infoLabel.Text = studsText .. " studs | " .. identifier .. " | " .. hpText
+	else
+		data.infoLabel.Text = studsText .. " studs | " .. identifier .. " | " .. hpText
+		data.infoLabel.TextColor3 = overlayColor
+	end
+	data.highlight.FillColor = overlayColor
+	data.highlight.OutlineColor = overlayColor
+end
+
+local function updatePlayerOverlays()
+	if isShuttingDown or not overlayEnabled then return end
+	local localDistancePart = getLocalDistancePart()
+
+	if targetModeIncludesPlayers() then
+		for _, targetPlayer in ipairs(Players:GetPlayers()) do
+			if targetPlayer ~= player then
+				updatePlayerOverlayTarget(targetPlayer, localDistancePart)
 			end
 		end
 	end
 
 	local stalePlayers = {}
 	for targetPlayer in pairs(overlayData) do
-		if not targetPlayer or targetPlayer.Parent ~= Players then
+		if not targetModeIncludesPlayers() or not targetPlayer or targetPlayer.Parent ~= Players then
 			table.insert(stalePlayers, targetPlayer)
 		end
 	end
 	for _, targetPlayer in ipairs(stalePlayers) do
 		removePlayerOverlay(targetPlayer)
+	end
+
+	if targetModeIncludesNpcs() then
+		for character in pairs(npcCharacters) do
+			if isNpcCharacter(character) then
+				updateNpcOverlayTarget(character, localDistancePart)
+			else
+				removeNpcOverlay(character)
+				if not isCharacterInWorkspace(character) or Players:GetPlayerFromCharacter(character) ~= nil then
+					npcCharacters[character] = nil
+				end
+			end
+		end
+	end
+
+	local staleNpcs = {}
+	for character in pairs(npcOverlayData) do
+		if not targetModeIncludesNpcs() or not isNpcCharacter(character) then
+			table.insert(staleNpcs, character)
+		end
+	end
+	for _, character in ipairs(staleNpcs) do
+		removeNpcOverlay(character)
 	end
 end
 
@@ -1222,44 +1701,59 @@ local function applyExpansionToPart(targetPlayer, character, part, partName, tea
 	end
 end
 
+local function expandCharacterParts(targetPlayer, character, teamColor, expandedPartsThisUpdate)
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if not isCharacterInWorkspace(character) or not humanoid or humanoid.Health <= 0 then
+		if character then restoreCharacterParts(character) end
+		return
+	end
+
+	for _, partName in ipairs(expandablePartNames) do
+		local setting = partSettings[partName]
+		if setting and setting.enabled then
+			local part = character:FindFirstChild(partName)
+			if part and part:IsA("BasePart") then
+				local size = getEffectivePartSize(partName)
+				local targetSize = Vector3.new(size, size, size)
+				expandedPartsThisUpdate[part] = true
+				applyExpansionToPart(targetPlayer, character, part, partName, teamColor, targetSize)
+			end
+		end
+	end
+end
+
 local function updateExpandedParts()
 	if isShuttingDown or not expanderEnabled then return end
 	local expandedPartsThisUpdate = {}
-	local rootExpansionSize = Vector3.new(expansionSize, expansionSize, expansionSize)
-	local headExpansionSize = Vector3.new(expansionSize * 0.8, expansionSize * 0.8, expansionSize * 0.8)
-	local bodyExpansionSize = Vector3.new(expansionSize * 0.7, expansionSize * 0.7, expansionSize * 0.7)
-	for _, targetPlayer in ipairs(Players:GetPlayers()) do
-		if targetPlayer ~= player then
-			local character = targetPlayer.Character
-			local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-			if isCharacterInWorkspace(character) and humanoid and humanoid.Health > 0 then
-				local teamColor = getTeamColor(targetPlayer)
-				for _, partName in ipairs(expandablePartNames) do
-					local part = character:FindFirstChild(partName)
-					if part and part:IsA("BasePart") then
-						local targetSize = bodyExpansionSize
-						if partName == "HumanoidRootPart" then
-							targetSize = rootExpansionSize
-						elseif partName == "Head" then
-							targetSize = headExpansionSize
-						end
-						expandedPartsThisUpdate[part] = true
-						applyExpansionToPart(targetPlayer, character, part, partName, teamColor, targetSize)
-					end
-				end
-			elseif character then
-				restoreCharacterParts(character)
+
+	if targetModeIncludesPlayers() then
+		for _, targetPlayer in ipairs(Players:GetPlayers()) do
+			if targetPlayer ~= player then
+				expandCharacterParts(
+					targetPlayer,
+					targetPlayer.Character,
+					getTeamColor(targetPlayer),
+					expandedPartsThisUpdate
+				)
+			end
+		end
+	end
+
+	if targetModeIncludesNpcs() then
+		for character in pairs(npcCharacters) do
+			if isNpcCharacter(character) then
+				expandCharacterParts(nil, character, Color3.fromRGB(255, 255, 255), expandedPartsThisUpdate)
+			elseif not isCharacterInWorkspace(character) or Players:GetPlayerFromCharacter(character) ~= nil then
+				npcCharacters[character] = nil
 			end
 		end
 	end
 
 	local staleParts = {}
 	for part, snapshot in pairs(originalPartData) do
-		if not part.Parent then
-			table.insert(staleParts, {part, snapshot})
-		elseif not expandedPartsThisUpdate[part]
-			or not snapshot.player or snapshot.player.Parent ~= Players
-			or not snapshot.character or snapshot.player.Character ~= snapshot.character
+		if not part.Parent
+			or not expandedPartsThisUpdate[part]
+			or not snapshot.character
 			or not part:IsDescendantOf(snapshot.character) then
 			table.insert(staleParts, {part, snapshot})
 		end
@@ -1301,6 +1795,7 @@ local function doApplyExpansion()
 	if inputValue then
 		expansionSize = inputValue
 		expansionSizeInput.Text = tostring(expansionSize)
+		updateAllPartSettingVisuals()
 		if expanderEnabled then
 			updateExpandedParts()
 		end
@@ -1349,7 +1844,7 @@ local function clampMainFrameToViewport()
 end
 
 local function doMinimize()
-	if isShuttingDown or confirmFrame.Visible or settingsFrame.Visible then return end
+	if isShuttingDown or confirmFrame.Visible or settingsFrame.Visible or targetFrame.Visible then return end
 	cancelWindowDrag()
 	isMinimized = not isMinimized
 	if isMinimized then
@@ -1394,6 +1889,16 @@ local function doToggleOverlay()
 		overlayToggleButton.Text = "Player overlay: OFF"
 		removeAllPlayerOverlays()
 	end
+end
+
+local function setTargetMode(mode, shouldSave)
+	if isShuttingDown or not VALID_TARGET_MODES[mode] then return end
+	targetMode = mode
+	removeAllPlayerOverlays()
+	updateTargetModeVisual()
+	if expanderEnabled then updateExpandedParts() end
+	if overlayEnabled then updatePlayerOverlays() end
+	if shouldSave ~= false then collectAndSave() end
 end
 
 local function doToggleGui()
@@ -1448,7 +1953,7 @@ local function handleCharacterAdded(targetPlayer, character)
 	if isShuttingDown or not character or targetPlayer.Parent ~= Players or targetPlayer.Character ~= character then return end
 	restorePlayerParts(targetPlayer)
 	removePlayerOverlay(targetPlayer)
-	removeManagedOverlayInstances(targetPlayer, character)
+	removeManagedOverlayInstances(targetPlayer.Name, character)
 	if expanderEnabled then updateExpandedParts() end
 	if overlayEnabled then updatePlayerOverlays() end
 end
@@ -1460,7 +1965,7 @@ local function handleCharacterRemoving(targetPlayer, character)
 	if data and data.character == character then
 		removePlayerOverlay(targetPlayer)
 	end
-	removeManagedOverlayInstances(targetPlayer, character)
+	removeManagedOverlayInstances(targetPlayer.Name, character)
 end
 
 local function setupCharacterTracking(targetPlayer)
@@ -1489,9 +1994,19 @@ local function setupCharacterTracking(targetPlayer)
 	end
 end
 
+local function unregisterNpcCharacter(character)
+	if not character or not npcCharacters[character] then return end
+	restoreCharacterParts(character)
+	local data = npcOverlayData[character]
+	removeNpcOverlay(character)
+	removeManagedOverlayInstances(data and data.identifier or character.Name, character)
+	npcCharacters[character] = nil
+end
+
 local function applyLoadedSettings()
 	if type(savedData) ~= "table" then
 		applyTheme("dark", false)
+		updateAllPartSettingVisuals()
 		return
 	end
 
@@ -1501,6 +2016,25 @@ local function applyLoadedSettings()
 		expansionSize = loadedSize
 		expansionSizeInput.Text = tostring(expansionSize)
 	end
+
+	if type(savedData.targetMode) == "string" and VALID_TARGET_MODES[savedData.targetMode] then
+		targetMode = savedData.targetMode
+	end
+
+	if type(savedData.partSettings) == "table" then
+		for _, partName in ipairs(expandablePartNames) do
+			local loadedPartSetting = savedData.partSettings[partName]
+			if type(loadedPartSetting) == "table" then
+				if type(loadedPartSetting.enabled) == "boolean" then
+					partSettings[partName].enabled = loadedPartSetting.enabled
+				end
+				local loadedOverride = normalizeExpansionSize(loadedPartSetting.sizeOverride)
+				if not loadedOverride then loadedOverride = normalizeExpansionSize(loadedPartSetting.size) end
+				partSettings[partName].sizeOverride = loadedOverride
+			end
+		end
+	end
+	updateAllPartSettingVisuals()
 
 	local loadedHideSetting = savedData.hideExpandedParts
 	if type(loadedHideSetting) ~= "boolean" then
@@ -1547,8 +2081,20 @@ local function loadedSettingsNeedRewrite()
 	if savedData.expansionSize ~= expansionSize
 		or savedData.theme ~= currentTheme
 		or savedData.hideExpandedParts ~= hideExpandedParts
+		or savedData.targetMode ~= targetMode
+		or type(savedData.partSettings) ~= "table"
 		or type(savedData.keybinds) ~= "table" then
 		return true
+	end
+	for _, partName in ipairs(expandablePartNames) do
+		local setting = partSettings[partName]
+		local savedSetting = savedData.partSettings[partName]
+		if type(savedSetting) ~= "table"
+			or savedSetting.enabled ~= setting.enabled
+			or savedSetting.sizeOverride ~= setting.sizeOverride
+			or savedSetting.size ~= nil then
+			return true
+		end
 	end
 	for _, actionName in ipairs(keybindActionNames) do
 		local keyCode = keybinds[actionName]
@@ -1571,6 +2117,8 @@ local function shutdownRuntime(animateClose, guiAlreadyDestroying)
 
 	pcall(forceRestoreAllExpandedParts)
 	pcall(removeAllPlayerOverlays)
+	table.clear(npcCharacters)
+	table.clear(npcOverlayData)
 
 	local trackedPlayers = {}
 	for targetPlayer in pairs(characterConnections) do
@@ -1632,6 +2180,41 @@ trackServiceConnection(mainFrame.Destroying:Connect(function()
 end))
 screenGui.Parent = playerGui
 
+local workspaceDescendantAdded = workspace.DescendantAdded
+if workspaceDescendantAdded then
+	trackServiceConnection(workspaceDescendantAdded:Connect(function(descendant)
+		if isShuttingDown then return end
+		registerNpcDescendant(descendant)
+		if descendant and descendant:IsA("Humanoid") then
+			if expanderEnabled then updateExpandedParts() end
+			if overlayEnabled then updatePlayerOverlays() end
+		end
+	end))
+end
+
+local workspaceDescendantRemoving = workspace.DescendantRemoving
+if workspaceDescendantRemoving then
+	trackServiceConnection(workspaceDescendantRemoving:Connect(function(descendant)
+		if isShuttingDown or not descendant then return end
+		local character = nil
+		if descendant:IsA("Humanoid") then
+			character = descendant.Parent
+		elseif descendant:IsA("Model") and npcCharacters[descendant] then
+			character = descendant
+		end
+		if character then unregisterNpcCharacter(character) end
+	end))
+end
+
+local descendantsLoaded, workspaceDescendants = pcall(function()
+	return workspace:GetDescendants()
+end)
+if descendantsLoaded and type(workspaceDescendants) == "table" then
+	for _, descendant in ipairs(workspaceDescendants) do
+		registerNpcDescendant(descendant)
+	end
+end
+
 for _, targetPlayer in ipairs(Players:GetPlayers()) do
 	if targetPlayer ~= player then
 		setupCharacterTracking(targetPlayer)
@@ -1652,7 +2235,7 @@ trackServiceConnection(Players.PlayerRemoving:Connect(function(removedPlayer)
 	local character = removedPlayer.Character
 	restorePlayerParts(removedPlayer)
 	removePlayerOverlay(removedPlayer)
-	removeManagedOverlayInstances(removedPlayer, character)
+	removeManagedOverlayInstances(removedPlayer.Name, character)
 	disconnectCharacterTracking(removedPlayer)
 end))
 
@@ -1677,6 +2260,45 @@ expansionSizeInput.FocusLost:Connect(function(enterPressed)
 	end
 end)
 
+for _, partName in ipairs(expandablePartNames) do
+	local capturedPartName = partName
+	local controls = partSettingControls[capturedPartName]
+	controls.toggle.MouseButton1Click:Connect(function()
+		if isShuttingDown then return end
+		animateButton(controls.toggle)
+		partSettings[capturedPartName].enabled = not partSettings[capturedPartName].enabled
+		updatePartSettingVisual(capturedPartName)
+		if expanderEnabled then updateExpandedParts() end
+		collectAndSave()
+	end)
+	controls.input.FocusLost:Connect(function()
+		if isShuttingDown then return end
+		local inputText = tostring(controls.input.Text or "")
+		local newOverride = nil
+		local isValid = string.match(inputText, "^%s*$") ~= nil
+		if not isValid then
+			newOverride = normalizeExpansionSize(inputText)
+			isValid = newOverride ~= nil
+		end
+		if isValid then
+			partSettings[capturedPartName].sizeOverride = newOverride
+			updatePartSettingVisual(capturedPartName)
+			if expanderEnabled then updateExpandedParts() end
+			collectAndSave()
+		else
+			updatePartSettingVisual(capturedPartName)
+			TweenService:Create(controls.stroke, TweenInfo.new(0.08), {Color = Color3.fromRGB(220, 50, 50)}):Play()
+			task.delay(0.4, function()
+				if not isShuttingDown and controls.stroke.Parent then
+					local color = currentTheme == "light" and Color3.fromRGB(200, 200, 210)
+						or Color3.fromRGB(80, 80, 100)
+					TweenService:Create(controls.stroke, TweenInfo.new(0.1), {Color = color}):Play()
+				end
+			end)
+		end
+	end)
+end
+
 expanderToggleButton.MouseButton1Click:Connect(function()
 	animateButton(expanderToggleButton)
 	doToggleExpander()
@@ -1686,6 +2308,38 @@ overlayToggleButton.MouseButton1Click:Connect(function()
 	animateButton(overlayToggleButton)
 	doToggleOverlay()
 end)
+
+targetModeButton.MouseButton1Click:Connect(function()
+	if isShuttingDown or confirmFrame.Visible or settingsFrame.Visible or targetFrame.Visible then return end
+	cancelWindowDrag()
+	animateButton(targetModeButton)
+	targetFrame.Visible = true
+	targetFrame.Position = UDim2.new(1, 0, 0, 0)
+	TweenService:Create(targetFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Position = UDim2.new(0, 0, 0, 0),
+	}):Play()
+end)
+
+targetBackButton.MouseButton1Click:Connect(function()
+	if isShuttingDown then return end
+	cancelWindowDrag()
+	animateButton(targetBackButton)
+	TweenService:Create(targetFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+		Position = UDim2.new(1, 0, 0, 0),
+	}):Play()
+	task.wait(0.2)
+	if not isShuttingDown and targetFrame.Parent then targetFrame.Visible = false end
+end)
+
+for mode, modeButton in pairs(targetModeButtons) do
+	local capturedMode = mode
+	local capturedButton = modeButton
+	capturedButton.MouseButton1Click:Connect(function()
+		if isShuttingDown then return end
+		animateButton(capturedButton)
+		setTargetMode(capturedMode)
+	end)
+end
 
 hideExpandedPartsButton.MouseButton1Click:Connect(function()
 	if isShuttingDown then return end
@@ -1708,7 +2362,7 @@ minimizeButton.MouseButton1Click:Connect(function()
 end)
 
 closeButton.MouseButton1Click:Connect(function()
-	if isShuttingDown or confirmFrame.Visible or settingsFrame.Visible then return end
+	if isShuttingDown or confirmFrame.Visible or settingsFrame.Visible or targetFrame.Visible then return end
 	cancelWindowDrag()
 	animateButton(closeButton)
 	if isMinimized then
@@ -1739,7 +2393,7 @@ noButton.MouseButton1Click:Connect(function()
 end)
 
 settingsButtonTop.MouseButton1Click:Connect(function()
-	if isShuttingDown or confirmFrame.Visible or settingsFrame.Visible then return end
+	if isShuttingDown or confirmFrame.Visible or settingsFrame.Visible or targetFrame.Visible then return end
 	cancelWindowDrag()
 	animateButton(settingsButtonTop)
 	if isMinimized then
@@ -1869,6 +2523,7 @@ end
 
 titleLabel.InputBegan:Connect(beginWindowDrag)
 settingsTitleLabel.InputBegan:Connect(beginWindowDrag)
+targetTitleLabel.InputBegan:Connect(beginWindowDrag)
 
 trackServiceConnection(UserInputService.InputChanged:Connect(function(input)
 	if isShuttingDown or not guiVisible or not isDragging or not dragPointerInput then return end
