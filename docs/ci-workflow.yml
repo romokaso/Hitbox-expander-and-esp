@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests (Lua 5.4)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Lua 5.4
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.4
+
+      - name: Unit tests for the pure helpers
+        run: lua5.4 tests/run.lua
+
+      - name: End-to-end smoke tests
+        run: lua5.4 tests/smoke.lua
+
+  format:
+    name: Formatting (StyLua)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install StyLua
+        run: npm install --global @johnnymorganz/stylua-bin@2.6.0
+
+      - name: Check formatting
+        run: stylua --check .
